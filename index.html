@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAP DAVID MÉDICAL | Pilotage Cloud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .tab-btn { padding: 10px 16px; border-radius: 14px; font-size: 0.875rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 10px; border: 2px solid transparent; background: #f1f5f9; }
+        .tab-btn.active { background: white; color: #0f172a; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-color: #e2e8f0; }
+        .modern-card { background: white; border-radius: 2rem; border: 1px solid #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        #sync-loader { position: fixed; bottom: 2rem; right: 2rem; background: white; padding: 12px 20px; border-radius: 99px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 50; display: none; font-size: 12px; font-weight: bold; border: 1px solid #e2e8f0; }
+        .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        .quick-input { background: #f1f5f9; border-radius: 12px; padding: 10px 16px; font-size: 0.875rem; width: 100%; border: 1px solid transparent; outline: none; transition: all 0.2s; }
+        .quick-input:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="sync-loader">
+        <i class="fas fa-cloud-upload-alt text-blue-500 mr-2"></i> Synchro Cloud...
+    </div>
+
+    <div class="max-w-7xl mx-auto">
+        <header class="gradient-bg text-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl mb-8 text-center relative overflow-hidden">
+            <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-2">DAVID MÉDICAL</h1>
+            <p class="text-blue-400 text-xs font-bold uppercase tracking-[0.3em] mb-8">Pilotage de Projet 2026</p>
+            <div class="flex justify-center gap-8">
+                <div class="text-center">
+                    <span id="days" class="text-3xl font-black block">00</span>
+                    <span class="text-[10px] uppercase opacity-50 font-bold">Jours</span>
+                </div>
+                <div class="h-10 w-px bg-white/10 self-center"></div>
+                <div class="text-center">
+                    <span id="hours" class="text-3xl font-black block">00</span>
+                    <span class="text-[10px] uppercase opacity-50 font-bold">Heures</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="mb-8 max-w-5xl mx-auto border border-slate-200 p-1.5 bg-slate-100/90 backdrop-blur-md rounded-[22px] flex items-center shadow-sm">
+            <nav id="main-nav" class="flex flex-1 overflow-x-auto gap-2 p-1 no-scrollbar"></nav>
+            <div class="h-6 w-px bg-slate-300 mx-2"></div>
+            <button onclick="addNewPhase()" class="p-2 text-slate-500 hover:text-blue-600 transition-colors">
+                <i class="fas fa-plus-circle text-xl"></i>
+            </button>
+        </div>
+
+        <div id="content-container">
+            <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                <i class="fas fa-circle-notch fa-spin text-3xl mb-4"></i>
+                <p class="font-bold">Initialisation du Cloud...</p>
+            </div>
+        </div>
+
+        <footer class="mt-20 py-8 border-t border-slate-200 text-center">
+            <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                CAP DAVID MÉDICAL &copy; 2026 | ID: <span id="project-id-display">capdavid-5cb65</span>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+
+        // Configuration Firebase (Tes clés réelles)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
+            authDomain: "capdavid-5cb65.firebaseapp.com",
+            databaseURL: "https://capdavid-5cb65-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "capdavid-5cb65",
+            storageBucket: "capdavid-5cb65.firebasestorage.app",
+            messagingSenderId: "346917679110",
+            appId: "1:346917679110:web:2b76ad31621eec618ed387",
+            measurementId: "G-GHTM9M5WCD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let appData = {
+            activeTab: 'roadmap',
+            roadmap: [{ id: 'roadmap', title: 'Tableau de bord' }],
+            tasks: {} 
+        };
+
+        // Connexion Auto
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                subscribeToData();
+            } else {
+                signInAnonymously(auth);
+            }
+        });
+
+        // Ecoute en temps réel du Cloud
+        function subscribeToData() {
+            onSnapshot(doc(db, 'cap_david', 'shared_config'), (docSnap) => {
+                if (docSnap.exists()) {
+                    appData = docSnap.data();
+                    renderUI();
+                } else {
+                    saveToCloud(); // Initialisation si vide
+                }
+            });
+        }
+
+        async function saveToCloud() {
+            document.getElementById('sync-loader').style.display = 'flex';
+            try {
+                await setDoc(doc(db, 'cap_david', 'shared_config'), appData);
+            } catch (e) { 
+                console.error("Erreur de sauvegarde:", e);
+                alert("Erreur de synchro. Vérifiez que Firestore est en 'Mode Test'.");
+            }
+            setTimeout(() => { document.getElementById('sync-loader').style.display = 'none'; }, 800);
+        }
+
+        // Rendu de l'Interface
+        window.renderUI = () => {
+            // Navigation
+            const nav = document.getElementById('main-nav');
+            nav.innerHTML = appData.roadmap.map(p => `
+                <div class="tab-btn ${appData.activeTab === p.id ? 'active' : ''}" onclick="switchTab('${p.id}')">
+                    <span>${p.title}</span>
+                    ${p.id !== 'roadmap' ? `<i class="fas fa-times-circle ml-1 opacity-20 hover:text-red-500" onclick="event.stopPropagation(); deletePhase('${p.id}')"></i>` : ''}
+                </div>
+            `).join('');
+
+            const container = document.getElementById('content-container');
+            if (appData.activeTab === 'roadmap') {
+                renderDashboard(container);
+            } else {
+                renderTaskView(container, appData.activeTab);
+            }
+            updateCountdown();
+        };
+
+        function renderDashboard(container) {
+            container.innerHTML = `
+                <div class="modern-card p-10 text-center">
+                    <div class="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <h2 class="text-2xl font-black text-slate-800 mb-2">Bienvenue sur le Cloud</h2>
+                    <p class="text-slate-500 max-w-md mx-auto">Toutes vos modifications sont enregistrées instantanément et disponibles sur vos autres appareils.</p>
+                </div>`;
+        }
+
+        function renderTaskView(container, phaseId) {
+            const tasks = appData.tasks[phaseId] || [];
+            container.innerHTML = `
+                <div class="modern-card p-8 md:p-10">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="font-black text-2xl text-slate-800 uppercase tracking-tight">${phaseId.replace(/_/g, ' ')}</h2>
+                        <span class="text-[10px] font-bold px-3 py-1 bg-slate-100 rounded-full text-slate-500">${tasks.length} Tâches</span>
+                    </div>
+                    <div class="space-y-3 mb-8">
+                        ${tasks.length > 0 ? tasks.map((t, i) => `
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-blue-100 transition-all">
+                                <span class="font-semibold text-slate-700 ${t.done ? 'line-through opacity-40' : ''}">${t.label}</span>
+                                <div onclick="toggleTask('${phaseId}', ${i})" class="status-pill ${t.done ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-400'}">
+                                    ${t.done ? '<i class="fas fa-check"></i>' : 'À faire'}
+                                </div>
+                            </div>
+                        `).join('') : '<p class="text-center py-10 text-slate-300 italic">Aucune tâche pour le moment.</p>'}
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="newTaskInput" placeholder="Ajouter une tâche et appuyez sur Entrée..." 
+                               class="quick-input" 
+                               onkeypress="if(event.key === 'Enter') { addTask('${phaseId}', this.value); this.value = ''; }">
+                        <i class="fas fa-plus absolute right-4 top-3.5 text-slate-300"></i>
+                    </div>
+                </div>`;
+        }
+
+        // Fonctions Globales
+        window.switchTab = (id) => { 
+            appData.activeTab = id; 
+            renderUI(); 
+            saveToCloud(); 
+        };
+        
+        window.addNewPhase = () => {
+            const name = prompt("Nom du nouveau pôle stratégique ?");
+            if(name && name.trim() !== "") {
+                const id = name.toLowerCase().trim().replace(/\s+/g, '_');
+                appData.roadmap.push({ id, title: name });
+                appData.tasks[id] = [];
+                appData.activeTab = id;
+                saveToCloud();
+            }
+        };
+
+        window.deletePhase = (id) => {
+            if(confirm(`Voulez-vous vraiment supprimer le pôle "${id}" ?`)) {
+                appData.roadmap = appData.roadmap.filter(p => p.id !== id);
+                delete appData.tasks[id];
+                appData.activeTab = 'roadmap';
+                saveToCloud();
+            }
+        };
+
+        window.addTask = (id, val) => {
+            if(!val || val.trim() === "") return;
+            if(!appData.tasks[id]) appData.tasks[id] = [];
+            appData.tasks[id].push({ label: val, done: false, date: new Date().toISOString() });
+            saveToCloud();
+        };
+
+        window.toggleTask = (id, index) => {
+            appData.tasks[id][index].done = !appData.tasks[id][index].done;
+            saveToCloud();
+        };
+
+        function updateCountdown() {
+            const target = new Date("2026-09-01").getTime();
+            const now = new Date().getTime();
+            const diff = target - now;
+            
+            document.getElementById('days').innerText = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+            document.getElementById('hours').innerText = Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+        }
+
+        // Lancement initial
+        setInterval(updateCountdown, 60000);
+        renderUI();
+    </script>
+</body>
+</html>
