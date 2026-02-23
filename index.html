@@ -3,235 +3,792 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAP DAVID MÉDICAL | Pilotage Cloud</title>
+    <title>CAP DAVID MÉDICAL | Cloud Sync</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
-        .tab-btn { padding: 10px 16px; border-radius: 14px; font-size: 0.875rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 10px; border: 2px solid transparent; background: #f1f5f9; }
-        .tab-btn.active { background: white; color: #0f172a; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-color: #e2e8f0; }
-        .modern-card { background: white; border-radius: 2rem; border: 1px solid #f1f5f9; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        #sync-loader { position: fixed; bottom: 2rem; right: 2rem; background: white; padding: 12px 20px; border-radius: 99px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 50; display: none; font-size: 12px; font-weight: bold; border: 1px solid #e2e8f0; }
-        .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        .quick-input { background: #f1f5f9; border-radius: 12px; padding: 10px 16px; font-size: 0.875rem; width: 100%; border: 1px solid transparent; outline: none; transition: all 0.2s; }
-        .quick-input:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc;
+        }
+
+        .gradient-bg { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            border-radius: 14px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 2px solid transparent;
+            position: relative;
+            background: #f1f5f9;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #0f172a;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border-color: #e2e8f0;
+        }
+
+        .delete-tab-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            color: white;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+        
+        .delete-tab-btn:hover {
+            background: #ef4444;
+            transform: scale(1.1);
+        }
+
+        .modern-card {
+            background: white;
+            border-radius: 2rem;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .timeline-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 40px 20px;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .timeline-container::-webkit-scrollbar { height: 8px; }
+        .timeline-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .timeline-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .timeline-item {
+            min-width: 280px;
+            flex-shrink: 0;
+            position: relative;
+            padding-top: 30px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e2e8f0;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: -6px;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #3b82f6;
+            border: 4px solid white;
+            box-shadow: 0 0 0 2px #3b82f6;
+            z-index: 10;
+        }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .nav-sticky {
+            position: sticky;
+            top: 1rem;
+            z-index: 40;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 2.5rem;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .badge-notif {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #0f172a;
+        }
+
+        .quick-input {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .quick-input:focus {
+            outline: none;
+            background: white;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .late-warning {
+            color: #ef4444;
+            font-weight: 800;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .health-bar {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+        }
+        .health-segment {
+            width: 14px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .health-segment.active-green { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.4); }
+        .health-segment.active-orange { background: #f97316; box-shadow: 0 0 6px rgba(249,115,22,0.4); }
+        .health-segment.active-red { background: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.6); animation: pulse-red 1s infinite; }
+
+        .health-container {
+            background: rgba(255,255,255,0.03);
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: inline-flex;
+            flex-direction: column;
+            gap: 4px;
+            backdrop-filter: blur(10px);
+            width: fit-content;
+        }
+        
+        .notif-card {
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .notif-card:hover {
+            transform: translateX(4px);
+            background-color: #fee2e2;
+        }
+
+        #sync-loader {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 99px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 50;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+        }
     </style>
 </head>
+
 <body class="p-4 md:p-8">
 
-    <div id="sync-loader">
-        <i class="fas fa-cloud-upload-alt text-blue-500 mr-2"></i> Synchro Cloud...
+    <!-- Indicateur de synchronisation -->
+    <div id="sync-loader" class="hidden">
+        <i class="fas fa-circle-notch fa-spin text-blue-500"></i>
+        <span>Synchronisation Cloud...</span>
+    </div>
+
+    <!-- Popup de Notifications -->
+    <div id="notif-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-bell text-red-500"></i> Alertes Retards
+                </h3>
+                <button onclick="toggleNotif(false)" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="notif-list" class="space-y-4"></div>
+            <button onclick="toggleNotif(false)" class="w-full mt-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl transition-all">
+                Fermer
+            </button>
+        </div>
     </div>
 
     <div class="max-w-7xl mx-auto">
-        <header class="gradient-bg text-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl mb-8 text-center relative overflow-hidden">
-            <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-2">DAVID MÉDICAL</h1>
-            <p class="text-blue-400 text-xs font-bold uppercase tracking-[0.3em] mb-8">Pilotage de Projet 2026</p>
-            <div class="flex justify-center gap-8">
-                <div class="text-center">
-                    <span id="days" class="text-3xl font-black block">00</span>
-                    <span class="text-[10px] uppercase opacity-50 font-bold">Jours</span>
+        
+        <header class="gradient-bg text-white p-8 md:p-12 rounded-[2.5rem] shadow-2xl mb-8 relative overflow-hidden">
+            <!-- INDICATEUR DE SANTÉ -->
+            <div class="absolute top-8 left-8 z-20 hidden md:block">
+                <div class="health-container">
+                    <div class="flex items-center gap-3 mb-0.5">
+                         <span id="health-label" class="text-[8px] font-black uppercase tracking-[0.2em] text-white/40">Santé</span>
+                         <span id="late-count-badge" class="text-[8px] font-bold text-white/60 bg-white/5 px-1.5 py-0.5 rounded">0 Retard</span>
+                    </div>
+                    <div class="health-bar" id="health-bar">
+                        <div class="health-segment"></div>
+                        <div class="health-segment"></div>
+                        <div class="health-segment"></div>
+                        <div class="health-segment"></div>
+                        <div class="health-segment"></div>
+                    </div>
                 </div>
-                <div class="h-10 w-px bg-white/10 self-center"></div>
-                <div class="text-center">
-                    <span id="hours" class="text-3xl font-black block">00</span>
-                    <span class="text-[10px] uppercase opacity-50 font-bold">Heures</span>
+            </div>
+
+            <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="flex items-center gap-4 mb-2">
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tighter" id="title-company">DAVID MÉDICAL</h1>
                 </div>
+                
+                <div class="flex flex-col md:flex-row items-center gap-8 mt-4">
+                    <div class="flex items-center gap-6">
+                        <div class="text-center">
+                            <span id="days" class="text-2xl font-bold block">00</span>
+                            <span class="text-[9px] uppercase tracking-widest text-white/50 font-bold">Jours</span>
+                        </div>
+                        <div class="h-6 w-px bg-white/10"></div>
+                        <div class="text-center">
+                            <span id="hours" class="text-2xl font-bold block">00</span>
+                            <span class="text-[9px] uppercase tracking-widest text-white/50 font-bold">Heures</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:hidden mt-6">
+                    <div class="health-container">
+                        <div class="flex items-center justify-between gap-4">
+                             <span id="health-label-mobile" class="text-[8px] font-black uppercase tracking-[0.2em] text-white/40">Santé</span>
+                             <div class="health-bar" id="health-bar-mobile">
+                                <div class="health-segment"></div>
+                                <div class="health-segment"></div>
+                                <div class="health-segment"></div>
+                                <div class="health-segment"></div>
+                                <div class="health-segment"></div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOUTONS ACTIONS (NOTIFICATION & EXPORT) -->
+            <div class="absolute top-8 right-8 flex items-center gap-3 z-20">
+                <button onclick="exportData()" class="bg-white/10 hover:bg-white/20 p-2.5 rounded-full backdrop-blur-md transition-all" title="Exporter les données (Backup)">
+                    <i class="fas fa-download text-sm"></i>
+                </button>
+                <button onclick="toggleNotif(true)" class="relative bg-white/10 hover:bg-white/20 p-2.5 rounded-full backdrop-blur-md transition-all">
+                    <i class="fas fa-bell text-sm"></i>
+                    <div id="notif-badge" class="badge-notif hidden">0</div>
+                </button>
             </div>
         </header>
 
-        <div class="mb-8 max-w-5xl mx-auto border border-slate-200 p-1.5 bg-slate-100/90 backdrop-blur-md rounded-[22px] flex items-center shadow-sm">
-            <nav id="main-nav" class="flex flex-1 overflow-x-auto gap-2 p-1 no-scrollbar"></nav>
+        <!-- Navigation -->
+        <div class="nav-sticky mb-8 max-w-5xl mx-auto border border-slate-200 p-1.5 bg-slate-100/90 backdrop-blur-md rounded-[20px] flex items-center shadow-sm">
+            <nav id="main-nav" class="flex flex-1 overflow-x-auto gap-2 no-scrollbar p-1">
+                <!-- Injecté par JS -->
+            </nav>
             <div class="h-6 w-px bg-slate-300 mx-2"></div>
-            <button onclick="addNewPhase()" class="p-2 text-slate-500 hover:text-blue-600 transition-colors">
-                <i class="fas fa-plus-circle text-xl"></i>
+            <button onclick="addNewPhase()" class="p-2 text-slate-500 hover:text-blue-600 transition-colors" title="Ajouter un nouvel onglet">
+                <i class="fas fa-plus-circle text-lg"></i>
             </button>
         </div>
 
         <div id="content-container">
             <div class="flex flex-col items-center justify-center py-20 text-slate-400">
                 <i class="fas fa-circle-notch fa-spin text-3xl mb-4"></i>
-                <p class="font-bold">Initialisation du Cloud...</p>
+                <p class="font-bold">Connexion au Cloud...</p>
             </div>
         </div>
 
-        <footer class="mt-20 py-8 border-t border-slate-200 text-center">
-            <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                CAP DAVID MÉDICAL &copy; 2026 | ID: <span id="project-id-display">capdavid-5cb65</span>
+        <footer class="mt-20 py-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400">
+            <div class="text-[10px] font-bold uppercase tracking-widest">CAP DAVID MÉDICAL © 2026</div>
+            <div class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full">
+                <span class="text-[9px] font-black">USER ID:</span>
+                <span id="user-display-id" class="text-[9px] font-mono select-all">Chargement...</span>
             </div>
         </footer>
     </div>
 
+    <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuration Firebase (Tes clés réelles)
-        const firebaseConfig = {
-            apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
-            authDomain: "capdavid-5cb65.firebaseapp.com",
-            databaseURL: "https://capdavid-5cb65-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "capdavid-5cb65",
-            storageBucket: "capdavid-5cb65.firebasestorage.app",
-            messagingSenderId: "346917679110",
-            appId: "1:346917679110:web:2b76ad31621eec618ed387",
-            measurementId: "G-GHTM9M5WCD"
-        };
-
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'cap-david-medical-v6';
 
+        // ÉTAT DE L'APP
         let appData = {
             activeTab: 'roadmap',
-            roadmap: [{ id: 'roadmap', title: 'Tableau de bord' }],
-            tasks: {} 
+            config: { companyName: "DAVID MÉDICAL", targetYear: "2026" },
+            roadmap: [
+                { id: 'roadmap', title: 'Tableau de bord', key: 'overview' },
+                { id: 'operations', title: 'Mobiliers / Immobiliers', key: 'operations' },
+                { id: 'juridique', title: 'Juridique / Administratif', key: 'juridique' }
+            ],
+            operations: [
+                { category: 'Installation', items: [
+                    { label: 'Choix du local', status: 'terminée', date: '2024-01-15' },
+                    { label: 'Achat mobilier bureau', status: 'en cours', date: '2024-03-20' }
+                ]}
+            ],
+            juridique: [
+                { category: 'Société', items: [
+                    { label: 'Rédaction Statuts', status: 'en cours', date: '2024-02-10' }
+                ]}
+            ]
         };
 
-        // Connexion Auto
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                subscribeToData();
+        let user = null;
+        let isSaving = false;
+
+        // AUTHENTIFICATION
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
             } else {
-                signInAnonymously(auth);
+                await signInAnonymously(auth);
+            }
+        };
+
+        onAuthStateChanged(auth, (u) => {
+            user = u;
+            if (user) {
+                document.getElementById('user-display-id').innerText = user.uid;
+                subscribeToData();
             }
         });
 
-        // Ecoute en temps réel du Cloud
-        function subscribeToData() {
-            onSnapshot(doc(db, 'cap_david', 'shared_config'), (docSnap) => {
+        // ABONNEMENT AUX DONNÉES CLOUD
+        const subscribeToData = () => {
+            const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'appData');
+            
+            onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
-                    appData = docSnap.data();
-                    renderUI();
+                    if (!isSaving) {
+                        appData = docSnap.data();
+                        renderUI();
+                    }
                 } else {
-                    saveToCloud(); // Initialisation si vide
+                    saveToCloud();
+                    renderUI();
                 }
+            }, (error) => {
+                console.error("Erreur Cloud:", error);
             });
-        }
+        };
 
-        async function saveToCloud() {
-            document.getElementById('sync-loader').style.display = 'flex';
+        // SAUVEGARDE CLOUD
+        const saveToCloud = async () => {
+            if (!user) return;
+            isSaving = true;
+            const loader = document.getElementById('sync-loader');
+            loader.classList.remove('hidden');
+
             try {
-                await setDoc(doc(db, 'cap_david', 'shared_config'), appData);
-            } catch (e) { 
-                console.error("Erreur de sauvegarde:", e);
-                alert("Erreur de synchro. Vérifiez que Firestore est en 'Mode Test'.");
+                const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'appData');
+                await setDoc(docRef, appData);
+            } catch (e) {
+                console.error("Save failed:", e);
+            } finally {
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                    isSaving = false;
+                }, 800);
             }
-            setTimeout(() => { document.getElementById('sync-loader').style.display = 'none'; }, 800);
+        };
+
+        // UI RENDERING
+        window.renderUI = () => {
+            renderNav();
+            renderContent();
+            updateCountdown();
+            checkDeadlines();
+        };
+
+        function renderNav() {
+            const nav = document.getElementById('main-nav');
+            nav.innerHTML = appData.roadmap.map(phase => {
+                const isActive = appData.activeTab === phase.id;
+                return `
+                <div class="tab-btn ${isActive ? 'active' : ''}" 
+                     onclick="window.switchTab('${phase.id}')" 
+                     oncontextmenu="event.preventDefault(); window.editPhaseName('${phase.id}')">
+                    <span>${phase.title}</span>
+                    <button onclick="event.stopPropagation(); window.deletePhase('${phase.id}')" class="delete-tab-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `}).join('');
         }
 
-        // Rendu de l'Interface
-        window.renderUI = () => {
-            // Navigation
-            const nav = document.getElementById('main-nav');
-            nav.innerHTML = appData.roadmap.map(p => `
-                <div class="tab-btn ${appData.activeTab === p.id ? 'active' : ''}" onclick="switchTab('${p.id}')">
-                    <span>${p.title}</span>
-                    ${p.id !== 'roadmap' ? `<i class="fas fa-times-circle ml-1 opacity-20 hover:text-red-500" onclick="event.stopPropagation(); deletePhase('${p.id}')"></i>` : ''}
-                </div>
-            `).join('');
-
+        function renderContent() {
             const container = document.getElementById('content-container');
             if (appData.activeTab === 'roadmap') {
-                renderDashboard(container);
+                renderBoardAndTimeline(container);
             } else {
                 renderTaskView(container, appData.activeTab);
             }
-            updateCountdown();
-        };
+        }
 
-        function renderDashboard(container) {
+        function renderBoardAndTimeline(container) {
+            let allTasks = [];
+            appData.roadmap.forEach(p => {
+                if(p.id === 'roadmap') return;
+                const sections = appData[p.id] || [];
+                sections.forEach(s => s.items.forEach(item => allTasks.push({ ...item, phaseId: p.id, phaseName: p.title })));
+            });
+            allTasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+
             container.innerHTML = `
-                <div class="modern-card p-10 text-center">
-                    <div class="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
-                        <i class="fas fa-cloud"></i>
+                <div class="mb-12">
+                    <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3"><i class="fas fa-stream text-blue-500"></i> Fresque Chronologique</h2>
+                    <div class="modern-card overflow-hidden">
+                        <div class="timeline-container no-scrollbar">
+                            ${allTasks.length === 0 ? '<p class="p-8 text-slate-400 italic">Aucune donnée à afficher.</p>' : ''}
+                            ${allTasks.map(task => `
+                                <div class="timeline-item">
+                                    <div class="timeline-marker"></div>
+                                    <div onclick="window.goToTask('${task.phaseId}')" class="cursor-pointer bg-slate-50 p-5 rounded-2xl border ${isLate(task.date, task.status) ? 'border-red-200 bg-red-50/30' : 'border-slate-100'} hover:border-blue-200 transition-all shadow-sm">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">${task.phaseName}</span>
+                                            <span class="status-pill ${getStatusStyle(task.status)} scale-75 origin-right">${task.status}</span>
+                                        </div>
+                                        <p class="font-bold text-slate-800 text-sm mb-3">${task.label}</p>
+                                        <div class="flex items-center justify-between">
+                                            <div class="text-[11px] text-slate-400 font-medium">
+                                                <i class="far fa-calendar-alt mr-1"></i> ${new Date(task.date).toLocaleDateString('fr-FR')}
+                                            </div>
+                                            ${isLate(task.date, task.status) ? '<span class="late-warning uppercase"><i class="fas fa-clock"></i> Retard</span>' : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                    <h2 class="text-2xl font-black text-slate-800 mb-2">Bienvenue sur le Cloud</h2>
-                    <p class="text-slate-500 max-w-md mx-auto">Toutes vos modifications sont enregistrées instantanément et disponibles sur vos autres appareils.</p>
-                </div>`;
+                </div>
+
+                <h2 class="text-2xl font-black text-slate-800 mb-6">Avancement par pôle</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${appData.roadmap.filter(p => p.id !== 'roadmap').map(phase => {
+                        const sections = appData[phase.id] || [];
+                        let total = 0, done = 0;
+                        sections.forEach(c => c.items.forEach(i => { total++; if(i.status === 'terminée') done++; }));
+                        const prog = total > 0 ? Math.round((done/total)*100) : 0;
+                        return `
+                            <div onclick="window.switchTab('${phase.id}')" class="modern-card p-8 cursor-pointer hover:shadow-xl transition-all">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">${phase.title}</h3>
+                                <div class="flex items-center gap-4">
+                                    <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-blue-600 h-full" style="width: ${prog}%"></div>
+                                    </div>
+                                    <span class="font-black text-slate-400 text-sm">${prog}%</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
         }
 
         function renderTaskView(container, phaseId) {
-            const tasks = appData.tasks[phaseId] || [];
+            const sections = appData[phaseId] || [];
             container.innerHTML = `
-                <div class="modern-card p-8 md:p-10">
-                    <div class="flex justify-between items-center mb-8">
-                        <h2 class="font-black text-2xl text-slate-800 uppercase tracking-tight">${phaseId.replace(/_/g, ' ')}</h2>
-                        <span class="text-[10px] font-bold px-3 py-1 bg-slate-100 rounded-full text-slate-500">${tasks.length} Tâches</span>
-                    </div>
-                    <div class="space-y-3 mb-8">
-                        ${tasks.length > 0 ? tasks.map((t, i) => `
-                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-blue-100 transition-all">
-                                <span class="font-semibold text-slate-700 ${t.done ? 'line-through opacity-40' : ''}">${t.label}</span>
-                                <div onclick="toggleTask('${phaseId}', ${i})" class="status-pill ${t.done ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-slate-400'}">
-                                    ${t.done ? '<i class="fas fa-check"></i>' : 'À faire'}
-                                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    ${sections.map((section, sIdx) => `
+                        <div class="modern-card p-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-lg font-bold text-slate-800">${section.category}</h3>
+                                <button onclick="window.deleteCategory('${phaseId}', ${sIdx})" class="text-slate-300 hover:text-red-500 transition-colors">
+                                    <i class="fas fa-trash-alt text-sm"></i>
+                                </button>
                             </div>
-                        `).join('') : '<p class="text-center py-10 text-slate-300 italic">Aucune tâche pour le moment.</p>'}
+                            <div class="space-y-4 mb-6">
+                                ${section.items.map((item, iIdx) => `
+                                    <div class="flex items-center justify-between p-4 ${isLate(item.date, item.status) ? 'bg-red-50' : 'bg-slate-50'} rounded-2xl group border ${isLate(item.date, item.status) ? 'border-red-100' : 'border-transparent'}">
+                                        <div class="flex-1">
+                                            <div class="font-bold text-slate-700 text-sm">${item.label}</div>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <input type="date" value="${item.date}" onchange="window.updateDate('${phaseId}', ${sIdx}, ${iIdx}, this.value)" 
+                                                    class="bg-transparent text-[10px] ${isLate(item.date, item.status) ? 'text-red-500' : 'text-slate-400'} font-bold uppercase outline-none">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button onclick="window.cycleStatus('${phaseId}', ${sIdx}, ${iIdx})" class="status-pill ${getStatusStyle(item.status)}">${item.status}</button>
+                                            <button onclick="window.deleteTask('${phaseId}', ${sIdx}, ${iIdx})" class="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="text" id="input-task-${sIdx}" placeholder="Nouvelle tâche..." class="quick-input" onkeypress="if(event.key === 'Enter') window.handleAddTask('${phaseId}', ${sIdx})">
+                                <button onclick="window.handleAddTask('${phaseId}', ${sIdx})" class="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col justify-center gap-4 bg-white/50">
+                        <div class="text-center mb-2"><p class="text-xs font-black text-slate-400 uppercase tracking-widest">Ajouter une catégorie</p></div>
+                        <div class="flex gap-2">
+                            <input type="text" id="input-category" placeholder="Nom..." class="quick-input bg-white" onkeypress="if(event.key === 'Enter') window.handleAddCategory('${phaseId}')">
+                            <button onclick="window.handleAddCategory('${phaseId}')" class="bg-slate-800 text-white px-6 rounded-xl hover:bg-black font-bold">Créer</button>
+                        </div>
                     </div>
-                    <div class="relative">
-                        <input type="text" id="newTaskInput" placeholder="Ajouter une tâche et appuyez sur Entrée..." 
-                               class="quick-input" 
-                               onkeypress="if(event.key === 'Enter') { addTask('${phaseId}', this.value); this.value = ''; }">
-                        <i class="fas fa-plus absolute right-4 top-3.5 text-slate-300"></i>
-                    </div>
-                </div>`;
+                </div>
+            `;
         }
 
-        // Fonctions Globales
-        window.switchTab = (id) => { 
-            appData.activeTab = id; 
-            renderUI(); 
-            saveToCloud(); 
+        // HELPERS
+        function isLate(itemDate, status) {
+            if (status === 'terminée') return false;
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            return new Date(itemDate) < today;
+        }
+
+        function getStatusStyle(s) {
+            if (s === 'terminée') return 'bg-green-100 text-green-700';
+            if (s === 'en cours') return 'bg-blue-100 text-blue-700';
+            return 'bg-slate-200 text-slate-600';
+        }
+
+        function checkDeadlines() {
+            let lateTasks = [];
+            appData.roadmap.forEach(phase => {
+                if(phase.id === 'roadmap') return;
+                const sections = appData[phase.id] || [];
+                sections.forEach(section => {
+                    section.items.forEach(item => {
+                        if(isLate(item.date, item.status)) {
+                            lateTasks.push({ ...item, phaseId: phase.id, phaseTitle: phase.title });
+                        }
+                    });
+                });
+            });
+
+            updateHealthUI(lateTasks.length);
+            const badge = document.getElementById('notif-badge');
+            const list = document.getElementById('notif-list');
+
+            if(lateTasks.length > 0) {
+                badge.innerText = lateTasks.length;
+                badge.classList.remove('hidden');
+                list.innerHTML = lateTasks.map(t => `
+                    <div onclick="window.goToTask('${t.phaseId}')" class="notif-card p-4 bg-red-50 border border-red-100 rounded-2xl">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-[10px] font-black text-red-600 uppercase tracking-widest">${t.phaseTitle}</span>
+                            <span class="text-[10px] font-bold text-red-400">${new Date(t.date).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800">${t.label}</p>
+                        <p class="text-[9px] text-red-400 mt-2 italic flex items-center gap-1">
+                            <i class="fas fa-external-link-alt"></i> Cliquez pour traiter
+                        </p>
+                    </div>
+                `).join('');
+            } else {
+                badge.classList.add('hidden');
+                list.innerHTML = `<div class="text-center py-8 text-slate-400 italic">Tout est sous contrôle !</div>`;
+            }
+        }
+
+        function updateHealthUI(lateCount) {
+            const updateBar = (barId, labelId) => {
+                const bar = document.getElementById(barId);
+                if(!bar) return;
+                const segments = bar.querySelectorAll('.health-segment');
+                const badge = document.getElementById('late-count-badge');
+                const label = document.getElementById(labelId);
+                
+                if(badge) badge.innerText = `${lateCount} Retard${lateCount > 1 ? 's' : ''}`;
+                segments.forEach(s => s.className = "health-segment");
+
+                if (lateCount <= 2) {
+                    segments.forEach(s => s.classList.add('active-green'));
+                    if(label) { label.innerText = "SANTÉ"; label.style.color = "#4ade80"; }
+                } else if (lateCount <= 4) {
+                    segments[0].classList.add('active-orange');
+                    segments[1].classList.add('active-orange');
+                    if(label) { label.innerText = "SANTÉ"; label.style.color = "#fb923c"; }
+                } else {
+                    segments[0].classList.add('active-red');
+                    if(label) { label.innerText = "SANTÉ"; label.style.color = "#f87171"; }
+                }
+            };
+            updateBar('health-bar', 'health-label');
+            updateBar('health-bar-mobile', 'health-label-mobile');
+        }
+
+        function updateCountdown() {
+            const diff = new Date("2026-09-01").getTime() - Date.now();
+            if (diff > 0) {
+                document.getElementById('days').innerText = Math.floor(diff / 86400000).toString().padStart(2, '0');
+                document.getElementById('hours').innerText = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0');
+            }
+        }
+
+        // EXPORT FONCTION
+        window.exportData = () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `cap_david_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
         };
-        
+
+        // ATTACH GLOBALS
+        window.switchTab = (id) => { appData.activeTab = id; renderUI(); saveToCloud(); };
+        window.toggleNotif = (show) => { document.getElementById('notif-modal').style.display = show ? 'flex' : 'none'; };
+        window.goToTask = (id) => { window.toggleNotif(false); window.switchTab(id); };
+
+        window.handleAddTask = (pId, sIdx) => {
+            const input = document.getElementById(`input-task-${sIdx}`);
+            const val = input.value.trim();
+            if(val) {
+                appData[pId][sIdx].items.push({ label: val, status: 'à faire', date: new Date().toISOString().split('T')[0] });
+                renderUI(); saveToCloud();
+            }
+        };
+
+        window.handleAddCategory = (pId) => {
+            const input = document.getElementById('input-category');
+            const val = input.value.trim();
+            if(val) {
+                if(!appData[pId]) appData[pId] = [];
+                appData[pId].push({ category: val, items: [] });
+                renderUI(); saveToCloud();
+            }
+        };
+
+        window.updateDate = (pId, sIdx, iIdx, val) => {
+            appData[pId][sIdx].items[iIdx].date = val;
+            renderUI(); saveToCloud();
+        };
+
+        window.cycleStatus = (pId, sIdx, iIdx) => {
+            const item = appData[pId][sIdx].items[iIdx];
+            const flow = ['à faire', 'en cours', 'terminée'];
+            item.status = flow[(flow.indexOf(item.status) + 1) % 3];
+            renderUI(); saveToCloud();
+        };
+
+        window.deleteTask = (pId, sIdx, iIdx) => {
+            appData[pId][sIdx].items.splice(iIdx, 1);
+            renderUI(); saveToCloud();
+        };
+
+        window.deleteCategory = (pId, sIdx) => {
+            if(confirm("Supprimer cette catégorie ?")) {
+                appData[pId].splice(sIdx, 1);
+                renderUI(); saveToCloud();
+            }
+        };
+
         window.addNewPhase = () => {
-            const name = prompt("Nom du nouveau pôle stratégique ?");
-            if(name && name.trim() !== "") {
-                const id = name.toLowerCase().trim().replace(/\s+/g, '_');
-                appData.roadmap.push({ id, title: name });
-                appData.tasks[id] = [];
-                appData.activeTab = id;
-                saveToCloud();
+            const n = prompt("Nom du nouvel onglet :");
+            if (n) {
+                const id = 'ph_' + Date.now();
+                appData.roadmap.push({ id, title: n, key: id });
+                appData[id] = [{ category: 'Objectifs', items: [] }];
+                window.switchTab(id);
             }
         };
 
         window.deletePhase = (id) => {
-            if(confirm(`Voulez-vous vraiment supprimer le pôle "${id}" ?`)) {
+            if (confirm(`Voulez-vous supprimer l'onglet "${appData.roadmap.find(p => p.id === id).title}" ?`)) {
                 appData.roadmap = appData.roadmap.filter(p => p.id !== id);
-                delete appData.tasks[id];
-                appData.activeTab = 'roadmap';
-                saveToCloud();
+                if (appData[id]) delete appData[id];
+                if (appData.activeTab === id) appData.activeTab = 'roadmap';
+                renderUI(); saveToCloud();
             }
         };
 
-        window.addTask = (id, val) => {
-            if(!val || val.trim() === "") return;
-            if(!appData.tasks[id]) appData.tasks[id] = [];
-            appData.tasks[id].push({ label: val, done: false, date: new Date().toISOString() });
-            saveToCloud();
+        window.editPhaseName = (id) => {
+            const phase = appData.roadmap.find(p => p.id === id);
+            const newName = prompt("Nouveau nom :", phase.title);
+            if (newName) {
+                phase.title = newName.trim();
+                renderUI(); saveToCloud();
+            }
         };
 
-        window.toggleTask = (id, index) => {
-            appData.tasks[id][index].done = !appData.tasks[id][index].done;
-            saveToCloud();
-        };
-
-        function updateCountdown() {
-            const target = new Date("2026-09-01").getTime();
-            const now = new Date().getTime();
-            const diff = target - now;
-            
-            document.getElementById('days').innerText = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
-            document.getElementById('hours').innerText = Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
-        }
-
-        // Lancement initial
+        // BOOTSTRAP
+        initAuth();
         setInterval(updateCountdown, 60000);
-        renderUI();
     </script>
 </body>
 </html>
