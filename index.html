@@ -1355,4 +1355,16 @@ if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         window.onload = init;
     </script>
 
+<script>
+  // Exemple pour activer un bouton "Ajouter une tâche"
+  const btnAdd = document.querySelector('#mon-bouton-ajouter'); // Remplacez par l'ID de votre bouton
+  const inputTask = document.querySelector('#mon-input');
+
+  btnAdd.addEventListener('click', () => {
+    const taskValue = inputTask.value;
+    console.log("Nouvelle tâche à envoyer à Firebase :", taskValue);
+    // Ici on ajoute la logique pour enregistrer dans votre Database Firebase
+  });
+</script>
+        
 </body></html>
