@@ -44,73 +44,58 @@
             color: #334155;
         }
 
+        /* Nouveau style pour le bouton corbeille */
         .saas-delete-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #fef2f2;
-            color: #ef4444;
-            border-radius: 0.75rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #fee2e2;
+            color: #cbd5e1;
+            transition: all 0.2s ease;
+            cursor: pointer;
         }
 
         .saas-delete-btn:hover {
-            background-color: #fee2e2;
-            color: #dc2626;
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
-        }
-
-        .saas-delete-btn:active {
-            transform: scale(0.95);
+            color: #ef4444;
+            transform: scale(1.1);
         }
 
         .category-card {
             background: white;
+            border-radius: 2rem;
             border: 1px solid #f1f5f9;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
         }
 
-        .category-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #4f46e5;
-            opacity: 0.1;
-        }
-
-        .category-card:hover {
-            border-color: #e2e8f0;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-        }
-
+        /* Style de la tâche inspiré de la photo */
         .task-item {
-            border-radius: 1rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid #f8fafc;
+            background: #fbfcfd;
         }
 
-        .task-item:hover {
-            background: #f8fafc;
-            border-color: #e2e8f0;
+        .task-item.status-in-progress {
+            background: #fffafa;
+            border-color: #fee2e2;
         }
 
         .task-done {
-            opacity: 0.5;
-            background-color: #f1f5f9;
-            border-color: transparent;
+            opacity: 0.6;
+            background-color: #f8fafc;
         }
 
         .status-badge {
             cursor: pointer;
             transition: all 0.2s ease;
             user-select: none;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 0.6rem 1.2rem;
+            border-radius: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
         }
 
         .status-badge:active {
@@ -128,47 +113,35 @@
             color-scheme: light;
             border: none;
             background: transparent;
+            cursor: pointer;
         }
 
-        /* Styles pour la modale de confirmation */
+        /* Modale */
         #confirm-modal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            animation: fadeIn 0.2s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         .modal-card {
             background: white;
-            padding: 2rem;
-            border-radius: 2rem;
+            padding: 2.5rem;
+            border-radius: 2.5rem;
             width: 90%;
             max-width: 400px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transform: scale(1);
-            animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px) scale(0.95); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         }
 
         #tabs-container::-webkit-scrollbar { display: none; }
         #tabs-container { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 md:p-10">
+<body class="bg-[#f4f7f9] min-h-screen p-4 md:p-10">
 
     <div id="app" class="max-w-7xl mx-auto">
         
@@ -190,7 +163,7 @@
             </button>
         </div>
 
-        <main id="main-content" class="bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-slate-100 min-h-[500px]">
+        <main id="main-content" class="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-sm border border-slate-100 min-h-[500px]">
             <!-- Contenu dynamique -->
         </main>
         
@@ -200,13 +173,13 @@
     <div id="confirm-modal">
         <div class="modal-card">
             <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                <i data-lucide="trash-2" class="w-8 h-8"></i>
             </div>
-            <h3 class="text-xl font-extrabold text-slate-900 text-center mb-2">Confirmer la suppression ?</h3>
-            <p class="text-slate-500 text-center text-sm mb-8">Cette action est irréversible et supprimera définitivement cet élément.</p>
+            <h3 class="text-xl font-extrabold text-slate-900 text-center mb-2">Supprimer cet élément ?</h3>
+            <p class="text-slate-500 text-center text-sm mb-8">Cette action effacera définitivement les données sélectionnées.</p>
             <div class="flex flex-col gap-3">
                 <button id="confirm-delete-btn" class="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-rose-100 active:scale-95">
-                    Supprimer définitivement
+                    Confirmer la suppression
                 </button>
                 <button id="cancel-delete-btn" class="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-2xl transition-all active:scale-95">
                     Annuler
@@ -230,8 +203,8 @@
         
         const STATES = {
             'todo': { label: 'À faire', bg: 'bg-slate-100', text: 'text-slate-600' },
-            'in-progress': { label: 'En cours', bg: 'bg-amber-100', text: 'text-amber-700' },
-            'done': { label: 'Terminé', bg: 'bg-emerald-100', text: 'text-emerald-700' }
+            'in-progress': { label: 'En cours', bg: 'bg-blue-100', text: 'text-blue-700' },
+            'done': { label: 'Terminée', bg: 'bg-emerald-100', text: 'text-emerald-700' }
         };
 
         let tabs = [
@@ -248,11 +221,10 @@
                 categories: [
                     {
                         id: 'cat1',
-                        title: 'Phase Initiale',
+                        title: 'Installation',
                         tasks: [
-                            { id: 't1', text: 'Analyse des besoins', status: 'done', date: '2024-03-20' },
-                            { id: 't2', text: 'Validation devis', status: 'in-progress', date: '2024-03-25' },
-                            { id: 't3', text: 'Réunion de lancement', status: 'todo', date: '2024-03-15' }
+                            { id: 't1', text: 'Choix du local', status: 'done', date: '2024-01-15' },
+                            { id: 't2', text: 'Achat mobilier bureau', status: 'in-progress', date: '2024-03-20' }
                         ]
                     }
                 ] 
@@ -275,11 +247,9 @@
             if (window.lucide) window.lucide.createIcons();
         }
 
-        // --- Système de confirmation ---
         function requestConfirmation(action) {
             pendingDeleteAction = action;
             confirmModal.style.display = 'flex';
-            if (window.lucide) window.lucide.createIcons();
         }
 
         confirmBtn.onclick = () => {
@@ -319,8 +289,8 @@
 
                 if (!tab.isDashboard) {
                     const del = document.createElement('button');
-                    del.className = 'saas-delete-btn w-6 h-6 ml-2';
-                    del.innerHTML = '<i data-lucide="x" class="w-3 h-3"></i>';
+                    del.className = 'saas-delete-btn ml-2';
+                    del.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
                     del.onclick = (e) => { 
                         e.stopPropagation(); 
                         requestConfirmation(() => deleteTab(tab.id));
@@ -343,9 +313,9 @@
                         <h2 class="text-4xl font-extrabold text-slate-900 mb-6">Tableau de bord</h2>
                         <p class="text-slate-500 text-lg">Bienvenue dans votre interface de gestion centralisée.</p>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-                            <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                                <div class="text-indigo-600 font-bold text-3xl mb-1">${tabs.length - 1}</div>
-                                <div class="text-slate-500 uppercase text-[10px] tracking-widest font-bold">Projets Actifs</div>
+                            <div class="p-8 bg-slate-50 rounded-[2rem] border border-slate-100">
+                                <div class="text-indigo-600 font-bold text-4xl mb-1">${tabs.length - 1}</div>
+                                <div class="text-slate-500 uppercase text-[10px] tracking-widest font-extrabold">Projets Actifs</div>
                             </div>
                         </div>
                     </div>
@@ -355,14 +325,14 @@
 
             contentArea.innerHTML = `
                 <div class="flex flex-col gap-10">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">${activeTab.title}</h2>
-                        <button onclick="window.addCategory()" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
+                        <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight">${activeTab.title}</h2>
+                        <button onclick="window.addCategory()" class="inline-flex items-center justify-center gap-2 px-7 py-4 bg-indigo-600 text-white rounded-[1.2rem] text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95">
                             <i data-lucide="layout-grid" class="w-4 h-4"></i> Ajouter une catégorie
                         </button>
                     </div>
                     
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8" id="categories-grid">
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-10" id="categories-grid">
                         ${activeTab.categories.map(cat => renderCategory(cat)).join('')}
                     </div>
                 </div>
@@ -371,11 +341,8 @@
 
         function getSortedTasks(tasks) {
             return [...tasks].sort((a, b) => {
-                // Règle 1: Tâches terminées toujours en dernier
                 if (a.status === 'done' && b.status !== 'done') return 1;
                 if (a.status !== 'done' && b.status === 'done') return -1;
-                
-                // Règle 2: Tri par date (chronologique)
                 const dateA = a.date || '9999-99-99';
                 const dateB = b.date || '9999-99-99';
                 return dateA.localeCompare(dateB);
@@ -386,67 +353,80 @@
             const sortedTasks = getSortedTasks(cat.tasks);
 
             return `
-                <div class="category-card rounded-[2.5rem] p-7 flex flex-col gap-6">
-                    <div class="flex items-center justify-between gap-2 border-b border-slate-50 pb-4">
+                <div class="category-card p-8 flex flex-col gap-8">
+                    <div class="flex items-center justify-between gap-4">
                         <input type="text" value="${cat.title}" 
-                            class="font-extrabold text-slate-800 text-lg outline-none w-full bg-transparent focus:text-indigo-600 placeholder:text-slate-300"
+                            class="font-extrabold text-slate-800 text-2xl outline-none w-full bg-transparent focus:text-indigo-600"
                             onblur="window.updateCategoryTitle('${cat.id}', this.value)"
-                            placeholder="Titre de catégorie">
+                            placeholder="Nom de la section">
                         <button onclick="window.confirmDeleteCategory('${cat.id}')" 
-                                class="saas-delete-btn w-9 h-9">
-                            <i data-lucide="x" class="w-5 h-5"></i>
+                                class="saas-delete-btn p-2">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
                     </div>
                     
-                    <div class="flex flex-col gap-3">
+                    <div class="flex flex-col gap-4">
                         ${sortedTasks.map(task => {
                             const state = STATES[task.status] || STATES['todo'];
                             const isDone = task.status === 'done';
+                            const isInProgress = task.status === 'in-progress';
+                            
+                            // Formatage de la date DD/MM/YYYY
+                            let formattedDate = "";
+                            if(task.date) {
+                                const [y, m, d] = task.date.split('-');
+                                formattedDate = `${d}/${m}/${y}`;
+                            }
+
                             return `
-                                <div class="task-item flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-slate-100 shadow-sm bg-white ${isDone ? 'task-done' : ''}">
-                                    <div class="flex items-center gap-4 flex-grow">
-                                        <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" 
-                                             class="status-badge px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-sm ${state.bg} ${state.text}">
-                                            ${state.label}
-                                        </div>
+                                <div class="task-item flex items-center justify-between gap-4 ${isDone ? 'task-done' : ''} ${isInProgress ? 'status-in-progress' : ''}">
+                                    <div class="flex flex-col gap-1.5 flex-grow">
                                         <input type="text" value="${task.text}" 
-                                            class="text-sm font-semibold text-slate-700 outline-none flex-grow bg-transparent transition-all ${isDone ? 'line-through opacity-40 italic' : ''}"
+                                            class="text-[17px] font-bold text-slate-800 outline-none bg-transparent ${isDone ? 'opacity-50' : ''}"
                                             onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)"
-                                            placeholder="Description de la tâche">
-                                    </div>
-                                    
-                                    <div class="flex items-center gap-4 justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-50">
-                                        <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-lg">
+                                            placeholder="Nouvelle tâche...">
+                                        
+                                        <div class="flex items-center gap-2 group relative">
+                                            <span class="text-[13px] font-bold ${isDone ? 'text-slate-400' : isInProgress ? 'text-rose-400' : 'text-slate-400'}">
+                                                ${formattedDate || 'Définir date'}
+                                            </span>
                                             <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
                                             <input type="date" value="${task.date || ''}"
-                                                class="text-[11px] font-bold text-slate-500 outline-none uppercase"
+                                                class="absolute inset-0 opacity-0 w-full h-full"
                                                 onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-6">
+                                        <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" 
+                                             class="status-badge shadow-sm ${state.bg} ${state.text}">
+                                            ${state.label}
                                         </div>
                                         
                                         <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}')" 
-                                                class="saas-delete-btn w-8 h-8">
-                                            <i data-lucide="x" class="w-4 h-4"></i>
+                                                class="saas-delete-btn opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </button>
                                     </div>
                                 </div>
                             `;
                         }).join('')}
                         
-                        ${cat.tasks.length === 0 ? '<p class="text-[11px] text-slate-400 italic px-4 py-6 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">Aucune tâche enregistrée.</p>' : ''}
-                    </div>
-                    
-                    <button onclick="window.addTask('${cat.id}')" class="group mt-2 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.15em] text-slate-400 hover:text-indigo-600 transition-all">
-                        <div class="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors shadow-sm">
-                            <i data-lucide="plus" class="w-4 h-4 text-slate-400 group-hover:text-indigo-600"></i>
+                        <div class="mt-4 pt-4 border-t border-slate-50 flex items-center gap-4">
+                            <input type="text" 
+                                   placeholder="Nouvelle tâche..." 
+                                   class="flex-grow bg-[#f8fafc] px-6 py-4 rounded-2xl text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                                   onkeydown="if(event.key === 'Enter') { window.addTask('${cat.id}', this.value); this.value=''; }">
+                            <button onclick="const input = this.previousElementSibling; if(input.value) { window.addTask('${cat.id}', input.value); input.value=''; }" 
+                                    class="bg-indigo-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 hover:scale-105 active:scale-95 transition-all">
+                                <i data-lucide="plus" class="w-6 h-6"></i>
+                            </button>
                         </div>
-                        Ajouter une tâche
-                    </button>
+                    </div>
                 </div>
             `;
         }
 
-        // --- GESTION DES ACTIONS ---
-        
         window.confirmDeleteCategory = (catId) => {
             requestConfirmation(() => {
                 const activeTab = tabs.find(t => t.id === activeTabId);
@@ -479,7 +459,7 @@
             const cat = activeTab.categories.find(c => c.id === catId);
             const task = cat.tasks.find(t => t.id === taskId);
             task.date = newDate;
-            render(); // Re-render pour appliquer le tri par date
+            render();
         };
 
         window.addCategory = () => {
@@ -498,12 +478,12 @@
             if (cat) cat.title = newTitle;
         };
 
-        window.addTask = (catId) => {
+        window.addTask = (catId, text = '') => {
             const activeTab = tabs.find(t => t.id === activeTabId);
             const cat = activeTab.categories.find(c => c.id === catId);
             cat.tasks.push({
                 id: 'task' + Date.now(),
-                text: '',
+                text: text,
                 status: 'todo',
                 date: new Date().toISOString().split('T')[0]
             });
