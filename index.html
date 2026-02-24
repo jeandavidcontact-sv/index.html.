@@ -20,83 +20,6 @@
             margin-bottom: 2rem;
         }
 
-        /* Barre d'onglets - Assurer une hauteur minimale pour la visibilité */
-        .tabs-wrapper {
-            background: #f1f5f9;
-            border-radius: 1.2rem;
-            padding: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 2.5rem;
-            min-height: 3.5rem; 
-            overflow-x: auto;
-        }
-
-        .tab-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.9rem;
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: #475569;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: 1px solid transparent;
-            white-space: nowrap;
-            background: transparent;
-        }
-
-        .tab-btn.active {
-            background: white;
-            color: #0f172a;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e2e8f0;
-        }
-
-        .tab-close-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 1.2rem;
-            height: 1.2rem;
-            border-radius: 50%;
-            background: #cbd5e1;
-            color: white;
-            font-size: 10px;
-            transition: opacity 0.2s;
-        }
-
-        .tab-close-icon:hover {
-            background: #94a3b8;
-        }
-
-        /* Bouton d'ajout d'onglet : Transparent avec contour bleu */
-        .add-tab-trigger {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 0.8rem;
-            background: transparent;
-            color: #2563eb; /* Bleu */
-            border: 2px solid #2563eb; /* Contour bleu */
-            flex-shrink: 0;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-right: 0.25rem;
-        }
-
-        .add-tab-trigger:hover {
-            background: rgba(37, 99, 235, 0.1); /* Fond bleu très léger au survol */
-            transform: scale(1.05);
-        }
-
         /* Kanban styling */
         .task-card { 
             transition: transform 0.2s, box-shadow 0.2s; 
@@ -131,14 +54,6 @@
                 DAVID MÉDICAL
             </h1>
         </header>
-
-        <!-- Navigation par Onglets Dynamiques -->
-        <div class="tabs-wrapper" id="tabs-container">
-            <!-- Les onglets s'inséreront ici via JS -->
-            <button class="add-tab-trigger" id="add-tab-btn" title="Ajouter un onglet">
-                <i data-lucide="plus" class="w-6 h-6"></i>
-            </button>
-        </div>
 
         <!-- Formulaire d'ajout rapide -->
         <section class="mb-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
@@ -191,7 +106,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Configuration Firebase
         const firebaseConfig = JSON.parse(__firebase_config);
@@ -200,17 +115,12 @@
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'david-medical-pro';
 
-        const tabsColl = collection(db, 'artifacts', appId, 'public', 'data', 'tabs');
         const tasksColl = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
 
         let currentUser = null;
-        let activeTabId = 'dashboard';
-        let tabsData = [];
         let tasksData = [];
 
         // DOM Elements
-        const tabsContainer = document.getElementById('tabs-container');
-        const addTabBtn = document.getElementById('add-tab-btn');
         const taskForm = document.getElementById('task-form');
 
         const refreshIcons = () => {
@@ -244,81 +154,12 @@
         function startListeners() {
             if (!currentUser) return;
 
-            // Écoute des onglets
-            onSnapshot(tabsColl, (snap) => {
-                tabsData = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => a.order - b.order);
-                
-                if (tabsData.length === 0) {
-                    // Création d'un onglet par défaut si vide
-                    setDoc(doc(tabsColl, 'dashboard'), { name: "Tableau de bord", order: 0 });
-                } else {
-                    if (!tabsData.find(t => t.id === activeTabId)) {
-                        activeTabId = tabsData[0].id;
-                    }
-                    renderTabs();
-                    renderTasks();
-                }
-            }, (err) => console.error("Erreur de synchro Onglets:", err));
-
-            // Écoute des tâches
+            // Écoute des tâches (page unique)
             onSnapshot(tasksColl, (snap) => {
                 tasksData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderTasks();
             }, (err) => console.error("Erreur de synchro Tâches:", err));
         }
-
-        // RENDU DES ONGLETS
-        function renderTabs() {
-            const existingTabs = tabsContainer.querySelectorAll('.tab-btn');
-            existingTabs.forEach(t => t.remove());
-
-            tabsData.forEach(tab => {
-                const btn = document.createElement('div');
-                btn.className = `tab-btn ${tab.id === activeTabId ? 'active' : ''}`;
-                btn.innerHTML = `
-                    <span>${tab.name}</span>
-                    <span class="tab-close-icon" onclick="event.stopPropagation(); window.deleteTabAction('${tab.id}')">
-                        <i data-lucide="x" class="w-2.5 h-2.5"></i>
-                    </span>
-                `;
-                
-                btn.onclick = () => {
-                    activeTabId = tab.id;
-                    renderTabs();
-                    renderTasks();
-                };
-
-                btn.ondblclick = () => {
-                    const newName = prompt("Nouveau nom pour cet onglet :", tab.name);
-                    if (newName && newName.trim()) {
-                        updateDoc(doc(tabsColl, tab.id), { name: newName.trim() });
-                    }
-                };
-
-                tabsContainer.insertBefore(btn, addTabBtn);
-            });
-            refreshIcons();
-        }
-
-        // Actions globales
-        window.deleteTabAction = async (id) => {
-            if (tabsData.length <= 1) return;
-            if (confirm("Supprimer cet onglet ?")) {
-                await deleteDoc(doc(tabsColl, id));
-            }
-        };
-
-        addTabBtn.onclick = async () => {
-            const name = prompt("Nom du nouvel onglet :");
-            if (name && name.trim()) {
-                const id = "tab_" + Date.now();
-                await setDoc(doc(tabsColl, id), { 
-                    name: name.trim(), 
-                    order: tabsData.length 
-                });
-                activeTabId = id;
-            }
-        };
 
         // GESTION DES TÂCHES
         async function handleAddTask(e) {
@@ -332,7 +173,6 @@
                 title: titleEl.value,
                 priority: priorityEl.value,
                 status: 'todo',
-                tabId: activeTabId,
                 createdAt: Timestamp.now()
             });
             titleEl.value = '';
@@ -348,9 +188,7 @@
             
             Object.values(cols).forEach(c => c.innerHTML = '');
 
-            const currentTasks = tasksData.filter(t => t.tabId === activeTabId);
-
-            currentTasks.forEach(task => {
+            tasksData.forEach(task => {
                 const card = document.createElement('div');
                 card.className = "task-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3";
                 
@@ -377,9 +215,9 @@
                 cols[task.status].appendChild(card);
             });
 
-            document.getElementById('todo-count').innerText = currentTasks.filter(t => t.status === 'todo').length;
-            document.getElementById('doing-count').innerText = currentTasks.filter(t => t.status === 'doing').length;
-            document.getElementById('done-count').innerText = currentTasks.filter(t => t.status === 'done').length;
+            document.getElementById('todo-count').innerText = tasksData.filter(t => t.status === 'todo').length;
+            document.getElementById('doing-count').innerText = tasksData.filter(t => t.status === 'doing').length;
+            document.getElementById('done-count').innerText = tasksData.filter(t => t.status === 'done').length;
             refreshIcons();
         }
 
