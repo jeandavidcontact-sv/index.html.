@@ -71,13 +71,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            opacity: 0.6;
-            filter: invert(0.5);
-        }
-
-        /* Loading Overlay */
         #loading-overlay {
             position: fixed;
             inset: 0;
@@ -89,13 +82,17 @@
             flex-direction: column;
             gap: 1rem;
         }
+
+        /* Scrollbar styling */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="loading-overlay">
         <div class="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="text-slate-500 font-bold text-sm tracking-widest uppercase">Connexion au Cloud...</p>
+        <p id="loading-text" class="text-slate-500 font-bold text-sm tracking-widest uppercase text-center px-4">Initialisation Cloud...</p>
     </div>
 
     <!-- HEADER -->
@@ -130,18 +127,15 @@
             </div>
 
             <div class="flex items-center gap-4">
+                <div id="user-display" class="text-[10px] text-white/30 hidden md:block"></div>
                 <button class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all border border-white/5 relative">
                     <i class="fas fa-bell text-sm"></i>
                     <span id="notif-dot" class="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full hidden"></span>
-                </button>
-                <button onclick="exportData()" class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all border border-white/5">
-                    <i class="fas fa-download text-sm"></i>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- NAVIGATION TABS -->
     <div class="max-w-7xl mx-auto px-6 mb-8">
         <div class="bg-slate-200/50 p-1.5 rounded-2xl flex items-center gap-1 overflow-x-auto no-scrollbar">
             <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
@@ -154,16 +148,14 @@
         </div>
     </div>
 
-    <!-- MAIN CONTENT AREA -->
     <main id="main-content" class="max-w-7xl mx-auto px-6 pb-20"></main>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration
+        // CONFIGURATION
         const firebaseConfig = {
             apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
             authDomain: "capdavid-5cb65.firebaseapp.com",
@@ -178,48 +170,57 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'capdavid-5cb65';
+        
+        // Correction de l'ID pour respecter RULE 1 : Segments pairs pour un document
+        // Path: /artifacts/{appId}/public/data/{collectionName}/{documentId}
+        const app_uid = typeof __app_id !== 'undefined' ? __app_id : 'capdavid-5cb65';
 
-        // State
-        let state = {
-            poles: [],
-            activeTab: 'dashboard'
-        };
+        let state = { poles: [], activeTab: 'dashboard' };
         let currentUser = null;
 
-        // AUTHENTICATION
-        const initAuth = async () => {
+        // AUTH & SYNC FLOW
+        const init = async () => {
+            const loadingText = document.getElementById('loading-text');
+            loadingText.innerText = "Authentification Cloud...";
+
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (e) {
+                        await signInAnonymously(auth);
+                    }
                 } else {
                     await signInAnonymously(auth);
                 }
             } catch (error) {
-                console.error("Auth error:", error);
+                console.error("Auth failed:", error);
+                loadingText.innerText = "Erreur fatale d'authentification.";
+                return;
             }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('user-display').innerText = `Cloud ID: ${user.uid.substring(0,8)}...`;
+                    startSync();
+                }
+            });
         };
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                startDataSync();
-            }
-        });
-
-        // DATA SYNC
-        const startDataSync = () => {
-            const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'mainState');
+        const startSync = () => {
+            // FIX: Utilisation d'un chemin à 6 segments pour un document (nombre pair requis)
+            // segments: artifacts (1), app_uid (2), public (3), data (4), global (5), mainState (6)
+            const stateDocRef = doc(db, 'artifacts', app_uid, 'public', 'data', 'global', 'mainState');
             
-            onSnapshot(stateDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    state = docSnap.data();
+            onSnapshot(stateDocRef, (snap) => {
+                if (snap.exists()) {
+                    state = snap.data();
                 } else {
-                    // Initial data if cloud is empty
                     state = {
                         poles: [
-                            { id: 'pole-1', name: 'Mobiliers / Immobiliers', categories: [] },
-                            { id: 'pole-2', name: 'Juridique / Administratif', categories: [] }
+                            { id: 'p1', name: 'Mobiliers / Immobiliers', categories: [] },
+                            { id: 'p2', name: 'Juridique / Administratif', categories: [] }
                         ],
                         activeTab: 'dashboard'
                     };
@@ -227,263 +228,193 @@
                 }
                 document.getElementById('loading-overlay').style.display = 'none';
                 render();
-            }, (error) => {
-                console.error("Firestore sync error:", error);
-                // Fallback to local if error
-                document.getElementById('loading-overlay').style.display = 'none';
+            }, (err) => {
+                console.error("Firestore Error:", err);
+                document.getElementById('loading-text').innerText = "Permission refusée ou chemin invalide.";
             });
         };
 
         const saveToCloud = async () => {
             if (!currentUser) return;
-            const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'mainState');
-            await setDoc(stateDocRef, state);
+            const stateDocRef = doc(db, 'artifacts', app_uid, 'public', 'data', 'global', 'mainState');
+            try {
+                await setDoc(stateDocRef, state);
+            } catch (e) {
+                console.error("Cloud Save Error:", e);
+            }
         };
 
-        // UI LOGIC
-        window.switchTab = (tabId) => {
-            state.activeTab = tabId;
-            saveToCloud();
-        };
-
+        // UI ACTIONS
+        window.switchTab = (id) => { state.activeTab = id; render(); saveToCloud(); };
+        
         window.addNewPole = () => {
-            const name = prompt("Nom du nouveau pôle ?");
-            if (name) {
-                const id = 'pole-' + Date.now();
-                state.poles.push({ id, name, categories: [] });
+            const n = prompt("Nom du pôle ?");
+            if (n) {
+                const id = 'p' + Date.now();
+                state.poles.push({ id, name: n, categories: [] });
                 state.activeTab = id;
+                render();
                 saveToCloud();
             }
         };
 
         window.removePole = (id, e) => {
             e.stopPropagation();
-            if(confirm("Supprimer ce pôle et tout son contenu ?")) {
+            if(confirm("Supprimer définitivement ce pôle ?")) {
                 state.poles = state.poles.filter(p => p.id !== id);
                 state.activeTab = 'dashboard';
+                render();
                 saveToCloud();
             }
         };
 
-        window.addCategory = (poleId) => {
-            const nameInput = document.getElementById(`new-cat-name-${poleId}`);
-            if (nameInput.value.trim()) {
-                const pole = state.poles.find(p => p.id === poleId);
-                pole.categories.push({ id: 'cat-' + Date.now(), name: nameInput.value, tasks: [] });
-                nameInput.value = '';
+        window.addCategory = (pId) => {
+            const inp = document.getElementById(`new-cat-${pId}`);
+            if (inp.value.trim()) {
+                state.poles.find(p => p.id === pId).categories.push({ id: 'c'+Date.now(), name: inp.value, tasks: [] });
+                inp.value = '';
+                render();
                 saveToCloud();
             }
         };
 
-        window.addTask = (poleId, catId) => {
-            const textInput = document.getElementById(`task-input-${catId}`);
-            const dateInput = document.getElementById(`task-date-${catId}`);
-            
-            if (textInput.value.trim()) {
-                const pole = state.poles.find(p => p.id === poleId);
-                const cat = pole.categories.find(c => c.id === catId);
-                cat.tasks.push({ 
-                    id: Date.now(), 
-                    text: textInput.value, 
-                    date: dateInput.value || null,
-                    done: false 
+        window.addTask = (pId, cId) => {
+            const tInp = document.getElementById(`ti-${cId}`);
+            const dInp = document.getElementById(`td-${cId}`);
+            if (tInp.value.trim()) {
+                state.poles.find(p => p.id === pId).categories.find(c => c.id === cId).tasks.push({
+                    id: Date.now(), text: tInp.value, date: dInp.value || null, done: false
                 });
-                textInput.value = '';
-                dateInput.value = '';
+                tInp.value = ''; dInp.value = '';
+                render();
                 saveToCloud();
             }
         };
 
-        window.toggleTask = (poleId, catId, taskId) => {
-            const pole = state.poles.find(p => p.id === poleId);
-            const cat = pole.categories.find(c => c.id === catId);
-            const task = cat.tasks.find(t => t.id === taskId);
-            task.done = !task.done;
+        window.toggleTask = (pId, cId, tId) => {
+            const t = state.poles.find(p => p.id === pId).categories.find(c => c.id === cId).tasks.find(tk => tk.id === tId);
+            t.done = !t.done;
+            render();
             saveToCloud();
         };
 
-        window.removeCategory = (poleId, catId) => {
-            const pole = state.poles.find(p => p.id === poleId);
-            pole.categories = pole.categories.filter(c => c.id !== catId);
-            saveToCloud();
+        window.removeCategory = (pId, cId) => {
+            if(confirm("Supprimer cette catégorie ?")) {
+                const p = state.poles.find(p => p.id === pId);
+                p.categories = p.categories.filter(c => c.id !== cId);
+                render();
+                saveToCloud();
+            }
         };
 
-        const targetDate = new Date('2026-09-01T08:30:00').getTime();
+        // HELPERS
+        const isLate = (t) => {
+            if (t.done || !t.date) return false;
+            return new Date(t.date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
+        };
 
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const distance = targetDate - now;
-            const daysEl = document.getElementById('days');
-            const hoursEl = document.getElementById('hours');
-            if (daysEl && hoursEl) {
-                daysEl.innerText = Math.max(0, Math.floor(distance / (1000 * 60 * 60 * 24))).toString().padStart(3, '0');
-                hoursEl.innerText = Math.max(0, Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).toString().padStart(2, '0');
-            }
-        }
-        setInterval(updateCountdown, 1000);
-
-        function isLate(task) {
-            if (task.done || !task.date) return false;
-            const today = new Date().setHours(0,0,0,0);
-            const taskDate = new Date(task.date).setHours(0,0,0,0);
-            return taskDate < today;
-        }
-
-        function updateGlobalHealth() {
-            let totalLate = 0;
-            state.poles.forEach(p => {
-                p.categories.forEach(c => {
-                    totalLate += c.tasks.filter(t => isLate(t)).length;
-                });
-            });
-
-            const lateBadge = document.getElementById('late-badge');
-            if(lateBadge) lateBadge.innerText = `${totalLate} Retard${totalLate > 1 ? 's' : ''}`;
-            
-            const notifDot = document.getElementById('notif-dot');
-            if(notifDot) totalLate > 0 ? notifDot.classList.remove('hidden') : notifDot.classList.add('hidden');
-
-            const healthContainer = document.getElementById('health-indicators');
-            if(!healthContainer) return;
-
-            let bars = '';
-            const barCount = 4;
-            const activeBars = totalLate === 0 ? 4 : (totalLate < 3 ? 3 : (totalLate < 6 ? 2 : 1));
-            
-            for(let i=0; i<barCount; i++) {
-                const color = activeBars > 1 ? 'bg-emerald-500' : 'bg-red-500';
-                const opacity = i < activeBars ? '' : '/20';
-                bars += `<div class="w-3 h-1 ${color}${opacity} rounded-full transition-all"></div>`;
-            }
-            healthContainer.innerHTML = bars;
-        }
-
+        // RENDER
         function render() {
-            updateGlobalHealth();
-            const dynamicTabs = document.getElementById('dynamic-tabs');
-            const mainContent = document.getElementById('main-content');
+            let totalLate = 0;
+            state.poles.forEach(p => p.categories.forEach(c => totalLate += c.tasks.filter(t => isLate(t)).length));
             
-            dynamicTabs.innerHTML = state.poles.map(p => `
+            document.getElementById('late-badge').innerText = `${totalLate} Retard${totalLate > 1 ? 's' : ''}`;
+            document.getElementById('notif-dot').style.display = totalLate > 0 ? 'block' : 'none';
+            
+            const hInd = document.getElementById('health-indicators');
+            const barsCount = 4;
+            const activeBars = totalLate === 0 ? 4 : (totalLate < 3 ? 3 : (totalLate < 6 ? 2 : 1));
+            hInd.innerHTML = Array(barsCount).fill(0).map((_,i) => `<div class="w-3 h-1 ${activeBars > 1 ? 'bg-emerald-500' : 'bg-red-500'} ${i < activeBars ? '' : 'opacity-20'} rounded-full transition-all"></div>`).join('');
+
+            document.getElementById('tab-dashboard').className = `tab-btn ${state.activeTab === 'dashboard' ? 'active' : 'text-slate-500'} px-6 py-2.5 rounded-xl text-sm font-semibold`;
+            document.getElementById('dynamic-tabs').innerHTML = state.poles.map(p => `
                 <button onclick="switchTab('${p.id}')" class="tab-btn ${state.activeTab === p.id ? 'active' : 'text-slate-500'} px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
-                    ${p.name} <i onclick="removePole('${p.id}', event)" class="fas fa-times text-[10px] opacity-30 hover:opacity-100"></i>
+                    ${p.name} <i onclick="removePole('${p.id}', event)" class="fas fa-times text-[10px] opacity-30 hover:opacity-100 p-1"></i>
                 </button>
             `).join('');
 
-            const dashTab = document.getElementById('tab-dashboard');
-            if(dashTab) dashTab.className = `tab-btn ${state.activeTab === 'dashboard' ? 'active' : 'text-slate-500'} px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2`;
-
-            if (state.activeTab === 'dashboard') renderDashboard(mainContent);
-            else renderPole(mainContent, state.activeTab);
-            updateCountdown();
-        }
-
-        function renderDashboard(container) {
-            container.innerHTML = `
-                <div class="animate-fade">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-1 h-6 bg-indigo-600 rounded-full"></div>
-                        <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">Fresque Chronologique</h2>
-                    </div>
-                    
-                    <div class="glass-card p-12 text-center mb-12">
-                        <p class="text-slate-400 italic font-medium">Connecté au Cloud • Les modifications sont partagées.</p>
-                    </div>
-
-                    <h2 class="text-xl font-extrabold text-slate-800 mb-6 tracking-tight">Avancement par pôle</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${state.poles.map(p => {
-                            let total = 0, done = 0, late = 0;
-                            p.categories.forEach(c => {
-                                total += c.tasks.length;
-                                done += c.tasks.filter(t => t.done).length;
-                                late += c.tasks.filter(t => isLate(t)).length;
-                            });
-                            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-                            return `
-                                <div class="glass-card p-8 hover:shadow-lg transition-shadow cursor-pointer" onclick="switchTab('${p.id}')">
-                                    <div class="flex justify-between items-start mb-6">
-                                        <h3 class="font-bold text-slate-800 leading-tight">${p.name}</h3>
-                                        ${late > 0 ? `<span class="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full font-bold">${late} Retard</span>` : ''}
-                                    </div>
-                                    <div class="flex items-center gap-4">
-                                        <div class="progress-bar-bg flex-1">
-                                            <div class="progress-bar-fill ${late > 0 ? 'bg-orange-400' : 'bg-indigo-600'}" style="width: ${percent}%"></div>
+            const container = document.getElementById('main-content');
+            if (state.activeTab === 'dashboard') {
+                container.innerHTML = `
+                    <div class="animate-fade">
+                        <div class="flex items-center justify-between mb-8">
+                            <h2 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">Vue d'ensemble</h2>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${state.poles.map(p => {
+                                let total = 0, done = 0, late = 0;
+                                p.categories.forEach(c => {
+                                    total += c.tasks.length;
+                                    done += c.tasks.filter(t => t.done).length;
+                                    late += c.tasks.filter(t => isLate(t)).length;
+                                });
+                                const pct = total === 0 ? 0 : Math.round((done/total)*100);
+                                return `
+                                    <div onclick="switchTab('${p.id}')" class="glass-card p-8 hover:shadow-xl transition-all cursor-pointer border-b-4 ${late > 0 ? 'border-red-400' : 'border-emerald-400'}">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <h3 class="font-bold text-slate-800">${p.name}</h3>
+                                            ${late > 0 ? `<span class="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded font-bold">${late} RETARD</span>` : ''}
                                         </div>
-                                        <span class="text-sm font-black text-slate-400">${percent}%</span>
+                                        <div class="progress-bar-bg mb-2"><div class="progress-bar-fill ${late > 0 ? 'bg-orange-400' : 'bg-indigo-600'}" style="width: ${pct}%"></div></div>
+                                        <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${total} Tâches</span><span class="text-sm font-black text-slate-800">${pct}%</span></div>
                                     </div>
-                                    <p class="text-[10px] text-slate-400 mt-4 uppercase font-bold tracking-widest">${total} tâches au total</p>
-                                </div>
-                            `;
-                        }).join('')}
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
-                </div>
-            `;
-        }
-
-        function renderPole(container, poleId) {
-            const pole = state.poles.find(p => p.id === poleId);
-            if(!pole) return;
-            container.innerHTML = `
-                <div class="animate-fade">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                `;
+            } else {
+                const pole = state.poles.find(p => p.id === state.activeTab);
+                if(!pole) { state.activeTab = 'dashboard'; render(); return; }
+                container.innerHTML = `
+                    <div class="animate-fade grid grid-cols-1 lg:grid-cols-2 gap-8">
                         ${pole.categories.map(cat => `
                             <div class="glass-card p-6">
                                 <div class="flex justify-between items-center mb-6">
                                     <h3 class="text-xl font-extrabold text-slate-800">${cat.name}</h3>
-                                    <button onclick="removeCategory('${poleId}', '${cat.id}')" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
+                                    <button onclick="removeCategory('${pole.id}', '${cat.id}')" class="text-slate-300 hover:text-red-500 p-2"><i class="fas fa-trash-alt"></i></button>
                                 </div>
                                 <div class="space-y-2 mb-6">
-                                    ${cat.tasks.map(t => {
-                                        const late = isLate(t);
-                                        return `
-                                            <div onclick="toggleTask('${poleId}', '${cat.id}', ${t.id})" class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer group hover:bg-slate-100 transition-colors">
-                                                <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${t.done ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}">
-                                                    ${t.done ? '<i class="fas fa-check text-white text-[8px]"></i>' : ''}
-                                                </div>
-                                                <div class="flex-1">
-                                                    <p class="text-sm font-semibold ${t.done ? 'line-through text-slate-400' : 'text-slate-700'}">${t.text}</p>
-                                                    ${t.date ? `<span class="text-[9px] font-bold ${late ? 'text-red-500' : 'text-slate-400'} uppercase"><i class="far fa-calendar-alt mr-1"></i> ${new Date(t.date).toLocaleDateString('fr-FR')}</span>` : ''}
-                                                </div>
+                                    ${cat.tasks.map(t => `
+                                        <div onclick="toggleTask('${pole.id}', '${cat.id}', ${t.id})" class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200">
+                                            <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${t.done ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}">
+                                                ${t.done ? '<i class="fas fa-check text-white text-[8px]"></i>' : ''}
                                             </div>
-                                        `;
-                                    }).join('')}
+                                            <div class="flex-1">
+                                                <p class="text-sm font-semibold ${t.done ? 'line-through text-slate-400' : 'text-slate-700'}">${t.text}</p>
+                                                ${t.date ? `<span class="text-[9px] font-bold ${isLate(t) ? 'text-red-500' : 'text-slate-400'} uppercase"><i class="far fa-calendar-alt mr-1"></i> ${new Date(t.date).toLocaleDateString('fr-FR')}</span>` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
                                 </div>
-                                <div class="space-y-2 bg-slate-50 p-3 rounded-2xl">
-                                    <input type="text" id="task-input-${cat.id}" placeholder="Nouvelle tâche..." class="w-full bg-white border border-slate-100 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <div class="bg-slate-50 p-4 rounded-2xl space-y-2 border border-slate-100">
+                                    <input id="ti-${cat.id}" type="text" placeholder="Action..." class="w-full px-4 py-2 rounded-lg text-sm border-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
                                     <div class="flex gap-2">
-                                        <input type="date" id="task-date-${cat.id}" class="flex-1 bg-white border border-slate-100 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
-                                        <button onclick="addTask('${poleId}', '${cat.id}')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center hover:bg-indigo-700">
-                                            <i class="fas fa-plus mr-2 text-xs"></i> <span class="text-xs font-bold">Ajouter</span>
-                                        </button>
+                                        <input id="td-${cat.id}" type="date" class="flex-1 px-4 py-2 rounded-lg text-xs border-none shadow-sm">
+                                        <button onclick="addTask('${pole.id}', '${cat.id}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors">Ajouter</button>
                                     </div>
                                 </div>
                             </div>
                         `).join('')}
-
-                        <div class="border-2 border-dashed border-slate-200 rounded-[32px] p-8 text-center bg-white/50">
-                            <span class="block text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8">AJOUTER UNE CATÉGORIE</span>
-                            <div class="flex gap-3">
-                                <input type="text" id="new-cat-name-${poleId}" placeholder="Nom (ex: CAMION)..." class="flex-1 bg-white border border-slate-100 rounded-xl px-4 py-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-200">
-                                <button onclick="addCategory('${poleId}')" class="bg-[#1e293b] text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-800 transition-colors">Créer</button>
+                        <div class="border-2 border-dashed border-slate-200 rounded-[32px] p-8 bg-white/50 text-center flex flex-col items-center justify-center">
+                            <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Nouveau Groupe de Tâches</span>
+                            <div class="flex gap-2 w-full max-w-sm">
+                                <input id="new-cat-${pole.id}" type="text" placeholder="Ex: LOGISTIQUE" class="flex-1 px-4 py-3 rounded-xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-slate-300 outline-none">
+                                <button onclick="addCategory('${pole.id}')" class="bg-slate-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-colors">Créer</button>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
+
+            const target = new Date('2026-09-01T08:30:00').getTime();
+            const now = Date.now();
+            const diff = target - now;
+            document.getElementById('days').innerText = Math.max(0, Math.floor(diff / 86400000)).toString().padStart(3,'0');
+            document.getElementById('hours').innerText = Math.max(0, Math.floor((diff % 86400000) / 3600000)).toString().padStart(2,'0');
         }
 
-        window.exportData = () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "david_medical_cloud_backup.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        };
-
-        // Execution
-        initAuth();
+        init();
     </script>
 </body>
 </html>
