@@ -176,11 +176,14 @@
             }
         };
 
-        // GESTION DES ONGLETS (Refactorisée pour plus de fiabilité)
-        function setupTabs() {
+        // GESTION DES ONGLETS (Attachée globalement pour GitHub production)
+        window.setupTabs = () => {
+            if (!tabsContainer) return;
             const tabs = tabsContainer.querySelectorAll('.tab-item');
+            
             tabs.forEach(tab => {
-                tab.onclick = (e) => {
+                // Utilisation d'EventListener au lieu de .onclick pour plus de stabilité
+                tab.addEventListener('click', (e) => {
                     const selectedService = tab.getAttribute('data-service');
                     if (!selectedService) return;
 
@@ -198,9 +201,9 @@
                     }
                     
                     renderTasks();
-                };
+                });
             });
-        }
+        };
 
         // AUTHENTIFICATION
         const initAuth = async () => {
@@ -303,7 +306,7 @@
                 cols[task.status].appendChild(card);
             });
 
-            // Attachement des événements sur les boutons générés
+            // Attachement des événements (Scope global via window)
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.onclick = () => window.deleteTaskActionItem(btn.dataset.id);
             });
@@ -324,12 +327,20 @@
 
         if (taskForm) taskForm.addEventListener('submit', handleAddTask);
         
-        // Initialisation propre
-        window.addEventListener('load', () => {
+        // Initialisation propre au chargement du DOM
+        document.addEventListener('DOMContentLoaded', () => {
             initAuth();
-            setupTabs();
+            window.setupTabs();
             refreshIcons();
         });
+
+        // Securité supplémentaire pour certains environnements de déploiement
+        window.onload = () => {
+            if (tabsContainer && !tabsContainer.querySelector('.active')) {
+                window.setupTabs();
+            }
+            refreshIcons();
+        };
     </script>
 </body>
 </html>
