@@ -20,6 +20,40 @@
             margin-bottom: 2rem;
         }
 
+        /* Navigation par onglets */
+        .tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            padding: 0.5rem;
+            background: #f1f5f9;
+            border-radius: 1.5rem;
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+        }
+
+        .tab-item {
+            padding: 0.75rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-item.active {
+            background: white;
+            color: #0f172a;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-item:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.5);
+            color: #1e293b;
+        }
+
         /* Kanban styling */
         .task-card { 
             transition: transform 0.2s, box-shadow 0.2s; 
@@ -55,12 +89,21 @@
             </h1>
         </header>
 
-        <!-- Formulaire d'ajout rapide -->
-        <section class="mb-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+        <!-- Barre d'onglets / Services -->
+        <nav class="tabs-container" id="services-tabs">
+            <div class="tab-item active" data-service="all">Tableau de bord</div>
+            <div class="tab-item" data-service="Urgence">Urgence</div>
+            <div class="tab-item" data-service="Cardiologie">Cardiologie</div>
+            <div class="tab-item" data-service="Radiologie">Radiologie</div>
+            <div class="tab-item" data-service="Logistique">Logistique</div>
+        </nav>
+
+        <!-- Formulaire d'ajout rapide (Masqué sur le Tableau de Bord) -->
+        <section id="form-section" class="mb-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
             <form id="task-form" class="flex flex-col md:flex-row gap-3">
                 <div class="flex-1 relative">
                     <i data-lucide="edit-3" class="absolute left-4 top-3.5 w-5 h-5 text-slate-400"></i>
-                    <input type="text" id="task-title" placeholder="Quelle est la mission ?" required
+                    <input type="text" id="task-title" placeholder="Quelle est la mission pour ce service ?" required
                         class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-slate-900 focus:outline-none transition-all">
                 </div>
                 <select id="task-priority" class="px-5 py-3.5 bg-slate-50 border-none rounded-2xl font-bold text-slate-600 appearance-none cursor-pointer">
@@ -119,15 +162,36 @@
 
         let currentUser = null;
         let tasksData = [];
+        let currentService = 'all'; // Service actif (all = Tableau de bord)
 
         // DOM Elements
         const taskForm = document.getElementById('task-form');
+        const formSection = document.getElementById('form-section');
+        const tabs = document.querySelectorAll('.tab-item');
 
         const refreshIcons = () => {
             if (window.lucide) {
                 window.lucide.createIcons();
             }
         };
+
+        // GESTION DES ONGLETS
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentService = tab.getAttribute('data-service');
+                
+                // Masquer le formulaire sur le tableau de bord (all) car on ne sait pas quel service attribuer
+                if (currentService === 'all') {
+                    formSection.classList.add('hidden');
+                } else {
+                    formSection.classList.remove('hidden');
+                }
+                
+                renderTasks();
+            });
+        });
 
         // AUTHENTIFICATION
         const initAuth = async () => {
@@ -154,7 +218,6 @@
         function startListeners() {
             if (!currentUser) return;
 
-            // Écoute des tâches (page unique)
             onSnapshot(tasksColl, (snap) => {
                 tasksData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderTasks();
@@ -167,12 +230,13 @@
             const titleEl = document.getElementById('task-title');
             const priorityEl = document.getElementById('task-priority');
             
-            if (!titleEl.value || !currentUser) return;
+            if (!titleEl.value || !currentUser || currentService === 'all') return;
 
             await addDoc(tasksColl, {
                 title: titleEl.value,
                 priority: priorityEl.value,
                 status: 'todo',
+                service: currentService, // On lie la tâche au service actif
                 createdAt: Timestamp.now()
             });
             titleEl.value = '';
@@ -188,7 +252,12 @@
             
             Object.values(cols).forEach(c => c.innerHTML = '');
 
-            tasksData.forEach(task => {
+            // Filtrage : Si "all", on montre tout. Sinon, seulement le service sélectionné.
+            const filteredTasks = currentService === 'all' 
+                ? tasksData 
+                : tasksData.filter(t => t.service === currentService);
+
+            filteredTasks.forEach(task => {
                 const card = document.createElement('div');
                 card.className = "task-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3";
                 
@@ -198,9 +267,17 @@
                     low: 'text-blue-600 bg-blue-50' 
                 };
 
+                // Badge de service visible uniquement sur le tableau de bord global
+                const serviceBadge = currentService === 'all' 
+                    ? `<span class="text-[9px] font-bold text-slate-400 border border-slate-200 px-2 py-0.5 rounded-md uppercase">${task.service || 'Général'}</span>` 
+                    : '';
+
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${pColor[task.priority]}">${task.priority}</span>
+                        <div class="flex gap-2">
+                            <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${pColor[task.priority]}">${task.priority}</span>
+                            ${serviceBadge}
+                        </div>
                         <button onclick="window.deleteTaskActionItem('${task.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
@@ -215,9 +292,9 @@
                 cols[task.status].appendChild(card);
             });
 
-            document.getElementById('todo-count').innerText = tasksData.filter(t => t.status === 'todo').length;
-            document.getElementById('doing-count').innerText = tasksData.filter(t => t.status === 'doing').length;
-            document.getElementById('done-count').innerText = tasksData.filter(t => t.status === 'done').length;
+            document.getElementById('todo-count').innerText = filteredTasks.filter(t => t.status === 'todo').length;
+            document.getElementById('doing-count').innerText = filteredTasks.filter(t => t.status === 'doing').length;
+            document.getElementById('done-count').innerText = filteredTasks.filter(t => t.status === 'done').length;
             refreshIcons();
         }
 
@@ -227,6 +304,8 @@
         if (taskForm) taskForm.addEventListener('submit', handleAddTask);
         
         window.onload = () => {
+            // Initialisation du formulaire (masqué par défaut sur Tableau de bord)
+            if (currentService === 'all') formSection.classList.add('hidden');
             refreshIcons();
         };
     </script>
