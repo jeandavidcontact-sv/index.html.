@@ -32,6 +32,7 @@
             transition: all 0.2s ease;
             cursor: pointer;
             border: 2px solid transparent;
+            position: relative;
         }
 
         .stat-card:hover {
@@ -44,7 +45,15 @@
             background-color: #f8faff;
         }
 
-        /* Scrollbar subtile pour les colonnes */
+        .delete-tab-btn {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .stat-card:hover .delete-tab-btn {
+            opacity: 1;
+        }
+
         .kanban-column-content::-webkit-scrollbar {
             width: 4px;
         }
@@ -68,26 +77,9 @@
             </div>
         </header>
 
-        <!-- STATISTIQUES PERSISTANTES (ONGLETS) -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="stat-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100 active" data-page="home" id="tab-home">
-                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Tableau de bord</p>
-                <h3 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Vue
-                </h3>
-            </div>
-            <div class="stat-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100" data-page="encours">
-                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">En cours</p>
-                <h3 id="doing-count-stat" class="text-2xl font-bold text-amber-500">0</h3>
-            </div>
-            <div class="stat-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100" data-page="terminees">
-                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Terminées</p>
-                <h3 id="completed-tasks-count" class="text-2xl font-bold text-emerald-500">0</h3>
-            </div>
-            <div class="stat-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100" data-page="progression">
-                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Progression</p>
-                <h3 id="progress-percent" class="text-2xl font-bold text-indigo-600">0%</h3>
-            </div>
+        <!-- STATISTIQUES PERSISTANTES (ONGLETS DYNAMIQUES) -->
+        <div class="flex flex-wrap gap-4 mb-8" id="tabs-container">
+            <!-- Les onglets seront injectés ici par JS -->
         </div>
 
         <!-- ZONE DE CONTENU DYNAMIQUE -->
@@ -150,7 +142,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp, setDoc, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
@@ -166,31 +158,47 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // Tentative d'activation de la persistance locale pour éviter les erreurs "offline"
+        try {
+            enableIndexedDbPersistence(db).catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.warn("La persistance Firestore n'a pas pu être activée (onglets multiples ouverts).");
+                } else if (err.code == 'unimplemented') {
+                    console.warn("Le navigateur ne supporte pas la persistance Firestore.");
+                }
+            });
+        } catch (e) {
+            console.warn("Erreur lors de l'initialisation de la persistance.");
+        }
         
         const appId = "david-medical-tracker";
         const tasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
+        const settingsDoc = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
 
         let currentUser = null;
         let allTasks = [];
         let currentPage = 'home';
+        let customTabs = [
+            { id: 'home', label: 'Tableau de bord', type: 'home', icon: 'layout-dashboard' },
+            { id: 'encours', label: 'En cours', type: 'encours' },
+            { id: 'terminees', label: 'Terminées', type: 'terminees' },
+            { id: 'progression', label: 'Progression', type: 'progression' }
+        ];
 
         const taskForm = document.getElementById('task-form');
         const viewHome = document.getElementById('view-home');
         const viewDetails = document.getElementById('view-details');
         const detailContent = document.getElementById('detail-content');
+        const tabsContainer = document.getElementById('tabs-container');
 
         const refreshIcons = () => {
             if (typeof lucide !== 'undefined') lucide.createIcons();
         };
 
-        // Navigation
         function navigateTo(pageId) {
             currentPage = pageId;
-            
-            // UI des onglets
-            document.querySelectorAll('.stat-card').forEach(card => {
-                card.classList.toggle('active', card.dataset.page === pageId);
-            });
+            renderTabs();
 
             if (pageId === 'home') {
                 viewHome.classList.remove('hidden');
@@ -202,20 +210,98 @@
             }
         }
 
+        function renderTabs() {
+            tabsContainer.innerHTML = '';
+            
+            customTabs.forEach(tab => {
+                const isActive = currentPage === tab.id;
+                const card = document.createElement('div');
+                card.className = `stat-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex-1 min-w-[150px] ${isActive ? 'active' : ''}`;
+                card.dataset.id = tab.id;
+                
+                const done = allTasks.filter(t => t.status === 'done').length;
+                const total = allTasks.length;
+                const doing = allTasks.filter(t => t.status === 'doing').length;
+                const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+                let valueDisplay = "";
+                if (tab.type === 'home') valueDisplay = `<h3 class="text-2xl font-bold text-slate-800 flex items-center gap-2"><i data-lucide="${tab.icon}" class="w-5 h-5"></i> Vue</h3>`;
+                else if (tab.type === 'encours') valueDisplay = `<h3 class="text-2xl font-bold text-amber-500">${doing}</h3>`;
+                else if (tab.type === 'terminees') valueDisplay = `<h3 class="text-2xl font-bold text-emerald-500">${done}</h3>`;
+                else if (tab.type === 'progression') valueDisplay = `<h3 class="text-2xl font-bold text-indigo-600">${percent}%</h3>`;
+                else valueDisplay = `<h3 class="text-2xl font-bold text-slate-400">---</h3>`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider editable-label cursor-text" contenteditable="true" spellcheck="false">${tab.label}</p>
+                        ${tab.id !== 'home' ? `
+                            <button class="delete-tab-btn text-slate-300 hover:text-rose-500 transition-colors">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                    ${valueDisplay}
+                `;
+
+                card.onclick = (e) => {
+                    if (e.target.closest('.delete-tab-btn') || e.target.closest('.editable-label')) return;
+                    navigateTo(tab.id);
+                };
+
+                const labelEl = card.querySelector('.editable-label');
+                labelEl.onblur = async () => {
+                    const newLabel = labelEl.innerText.trim();
+                    if (newLabel && newLabel !== tab.label) {
+                        tab.label = newLabel;
+                        await saveSettings();
+                    }
+                };
+                labelEl.onkeydown = (e) => { if(e.key === 'Enter') { e.preventDefault(); labelEl.blur(); } };
+
+                if (tab.id !== 'home') {
+                    card.querySelector('.delete-tab-btn').onclick = async (e) => {
+                        e.stopPropagation();
+                        customTabs = customTabs.filter(t => t.id !== tab.id);
+                        if (currentPage === tab.id) navigateTo('home');
+                        await saveSettings();
+                        renderTabs();
+                    };
+                }
+
+                tabsContainer.appendChild(card);
+            });
+
+            const addBtn = document.createElement('button');
+            addBtn.className = "bg-slate-200/50 hover:bg-slate-200 text-slate-400 rounded-2xl w-12 flex items-center justify-center transition-all border-2 border-dashed border-slate-300";
+            addBtn.innerHTML = '<i data-lucide="plus" class="w-6 h-6"></i>';
+            addBtn.onclick = async () => {
+                const newId = 'tab-' + Date.now();
+                customTabs.push({ id: newId, label: 'Nouvel onglet', type: 'custom' });
+                await saveSettings();
+                renderTabs();
+            };
+            tabsContainer.appendChild(addBtn);
+
+            refreshIcons();
+        }
+
         function renderDetailPage(pageId) {
+            const tab = customTabs.find(t => t.id === pageId);
+            if (!tab) return navigateTo('home');
+
             let html = "";
-            switch(pageId) {
+            switch(tab.type) {
                 case 'encours':
                     const doingTasks = allTasks.filter(t => t.status === 'doing');
                     html = `
                         <div class="flex items-center gap-3 mb-6">
                             <div class="p-3 bg-amber-100 rounded-2xl text-amber-600"><i data-lucide="play" class="w-6 h-6"></i></div>
-                            <h2 class="text-3xl font-extrabold text-slate-800">Missions en Production</h2>
+                            <h2 class="text-3xl font-extrabold text-slate-800">${tab.label}</h2>
                         </div>
                         <div class="grid gap-4">
                             ${doingTasks.length > 0 
                                 ? doingTasks.map(t => `<div class="p-5 border-l-4 border-amber-400 bg-amber-50/30 rounded-r-xl font-bold text-slate-700 shadow-sm">${t.title}</div>`).join('') 
-                                : '<p class="text-slate-400 italic">Aucune mission en cours de production.</p>'}
+                                : '<p class="text-slate-400 italic">Aucune mission en cours.</p>'}
                         </div>
                     `;
                     break;
@@ -224,12 +310,12 @@
                     html = `
                         <div class="flex items-center gap-3 mb-6">
                             <div class="p-3 bg-emerald-100 rounded-2xl text-emerald-600"><i data-lucide="check" class="w-6 h-6"></i></div>
-                            <h2 class="text-3xl font-extrabold text-slate-800">Historique des Succès</h2>
+                            <h2 class="text-3xl font-extrabold text-slate-800">${tab.label}</h2>
                         </div>
                         <div class="grid gap-4">
                             ${doneTasks.length > 0 
                                 ? doneTasks.map(t => `<div class="p-5 border-l-4 border-emerald-400 bg-emerald-50/30 rounded-r-xl font-bold text-slate-700 shadow-sm">${t.title}</div>`).join('') 
-                                : '<p class="text-slate-400 italic">Aucune mission terminée pour le moment.</p>'}
+                                : '<p class="text-slate-400 italic">Aucune mission terminée.</p>'}
                         </div>
                     `;
                     break;
@@ -240,7 +326,7 @@
                     html = `
                         <div class="flex items-center gap-3 mb-6">
                             <div class="p-3 bg-indigo-100 rounded-2xl text-indigo-600"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
-                            <h2 class="text-3xl font-extrabold text-slate-800">Analyse de la Progression</h2>
+                            <h2 class="text-3xl font-extrabold text-slate-800">${tab.label}</h2>
                         </div>
                         <div class="mb-10">
                             <div class="flex justify-between mb-2 font-bold text-slate-600">
@@ -251,36 +337,72 @@
                                 <div class="bg-indigo-600 h-full transition-all duration-1000 shadow-inner" style="width: ${percent}%"></div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center">
-                                <p class="text-slate-400 text-sm font-bold uppercase mb-2">Complétées</p>
-                                <span class="text-4xl font-black text-indigo-600">${done}</span>
-                             </div>
-                             <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center">
-                                <p class="text-slate-400 text-sm font-bold uppercase mb-2">En attente</p>
-                                <span class="text-4xl font-black text-slate-400">${total - done}</span>
-                             </div>
-                        </div>
                     `;
                     break;
+                default:
+                    html = `
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="p-3 bg-slate-100 rounded-2xl text-slate-600"><i data-lucide="info" class="w-6 h-6"></i></div>
+                            <h2 class="text-3xl font-extrabold text-slate-800">${tab.label}</h2>
+                        </div>
+                        <p class="text-slate-400 italic">Cet onglet personnalisé est prêt pour de nouveaux contenus.</p>
+                    `;
             }
             detailContent.innerHTML = html;
             refreshIcons();
         }
 
-        // Firebase & Data logic
+        async function saveSettings() {
+            if (!currentUser) return;
+            try {
+                await setDoc(settingsDoc, { customTabs });
+            } catch (error) {
+                console.error("Erreur lors de la sauvegarde des paramètres :", error);
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                // Utilisation de getDoc avec option pour forcer la lecture cache si offline
+                const snap = await getDoc(settingsDoc);
+                if (snap.exists() && snap.data().customTabs) {
+                    customTabs = snap.data().customTabs;
+                }
+            } catch (error) {
+                console.error("Erreur lors du chargement des paramètres :", error);
+                // Si erreur (ex: offline), on garde les onglets par défaut sans bloquer l'UI
+            }
+            renderTabs();
+        }
+
         async function initAuth() {
             try { await signInAnonymously(auth); } catch (e) { console.error(e); }
         }
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                // Chargement des paramètres une fois authentifié
+                await loadSettings();
+                // Mise en place du listener temps réel pour les tâches
                 onSnapshot(tasksCollection, (snapshot) => {
                     allTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     renderTasks(allTasks);
-                    updateStats(allTasks);
+                    renderTabs();
                     if (currentPage !== 'home') renderDetailPage(currentPage);
+                }, (error) => {
+                    console.error("Erreur onSnapshot tâches :", error);
+                });
+                
+                // Listener temps réel aussi pour les settings pour synchroniser entre sessions
+                onSnapshot(settingsDoc, (snapshot) => {
+                    if (snapshot.exists() && snapshot.data().customTabs) {
+                        customTabs = snapshot.data().customTabs;
+                        renderTabs();
+                        if (currentPage !== 'home') renderDetailPage(currentPage);
+                    }
+                }, (error) => {
+                    console.error("Erreur onSnapshot settings :", error);
                 });
             }
         });
@@ -290,19 +412,29 @@
             const title = document.getElementById('task-title').value.trim();
             const priority = document.getElementById('task-priority').value;
             if (title && currentUser) {
-                await addDoc(tasksCollection, {
-                    title, priority, status: 'todo',
-                    createdAt: Timestamp.now(), createdBy: currentUser.uid
-                });
-                document.getElementById('task-title').value = '';
+                try {
+                    await addDoc(tasksCollection, {
+                        title, priority, status: 'todo',
+                        createdAt: Timestamp.now(), createdBy: currentUser.uid
+                    });
+                    document.getElementById('task-title').value = '';
+                } catch (e) {
+                    console.error("Erreur ajout tâche :", e);
+                }
             }
         }
 
         function renderTasks(tasks) {
             const cols = { todo: 'col-todo', doing: 'col-doing', done: 'col-done' };
-            Object.values(cols).forEach(id => document.getElementById(id).innerHTML = '');
+            Object.values(cols).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '';
+            });
             
             tasks.forEach(task => {
+                const colEl = document.getElementById(cols[task.status]);
+                if (!colEl) return;
+
                 const card = document.createElement('div');
                 card.className = 'task-card bg-white p-5 rounded-2xl shadow-sm border border-slate-100 group';
                 const pColor = { low: 'bg-blue-50 text-blue-600', medium: 'bg-amber-50 text-amber-600', high: 'bg-rose-50 text-rose-600' };
@@ -314,7 +446,7 @@
                     </div>
                     <h4 class="font-semibold text-slate-800 mb-5 leading-tight">${task.title}</h4>
                     <div class="flex flex-wrap gap-2">
-                        ${task.status !== 'todo' ? `<button class="move-btn bg-slate-50 text-slate-400 p-2 rounded-xl text-[10px] font-bold hover:bg-slate-100" data-status="todo">Backlog</button>` : ''}
+                        ${task.status !== 'todo' ? `<button class="move-btn bg-slate-50 text-slate-400 p-2 rounded-xl text-[10px] font-bold hover:bg-slate-100" data-status="todo">Attente</button>` : ''}
                         ${task.status !== 'doing' ? `<button class="move-btn bg-indigo-50 text-indigo-600 p-2 rounded-xl text-[10px] font-bold hover:bg-indigo-100" data-status="doing">Prod</button>` : ''}
                         ${task.status !== 'done' ? `<button class="move-btn bg-emerald-50 text-emerald-600 p-2 rounded-xl text-[10px] font-bold hover:bg-emerald-100" data-status="done">Finir</button>` : ''}
                     </div>
@@ -324,28 +456,16 @@
                 card.querySelectorAll('.move-btn').forEach(btn => {
                     btn.onclick = () => updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tasks', task.id), { status: btn.dataset.status });
                 });
-                document.getElementById(cols[task.status]).appendChild(card);
+                colEl.appendChild(card);
             });
             refreshIcons();
             
-            ['todo', 'doing', 'done'].forEach(s => document.getElementById(`${s}-count`).innerText = tasks.filter(t => t.status === s).length);
+            ['todo', 'doing', 'done'].forEach(s => {
+                const countEl = document.getElementById(`${s}-count`);
+                if(countEl) countEl.innerText = tasks.filter(t => t.status === s).length;
+            });
         }
 
-        function updateStats(tasks) {
-            const done = tasks.filter(t => t.status === 'done').length;
-            const total = tasks.length;
-            const doing = tasks.filter(t => t.status === 'doing').length;
-            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-
-            document.getElementById('progress-percent').innerText = `${percent}%`;
-            document.getElementById('doing-count-stat').innerText = doing;
-            document.getElementById('completed-tasks-count').innerText = done;
-        }
-
-        // Listeners
-        document.querySelectorAll('.stat-card').forEach(card => {
-            card.onclick = () => navigateTo(card.dataset.page);
-        });
         document.getElementById('header-home').onclick = () => navigateTo('home');
         taskForm.onsubmit = addTask;
 
