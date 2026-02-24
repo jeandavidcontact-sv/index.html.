@@ -41,6 +41,7 @@
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
+            user-select: none;
         }
 
         .tab-item.active {
@@ -99,7 +100,7 @@
         </nav>
 
         <!-- Formulaire d'ajout rapide (Masqué sur le Tableau de Bord) -->
-        <section id="form-section" class="mb-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+        <section id="form-section" class="mb-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-200 hidden">
             <form id="task-form" class="flex flex-col md:flex-row gap-3">
                 <div class="flex-1 relative">
                     <i data-lucide="edit-3" class="absolute left-4 top-3.5 w-5 h-5 text-slate-400"></i>
@@ -162,12 +163,12 @@
 
         let currentUser = null;
         let tasksData = [];
-        let currentService = 'all'; // Service actif (all = Tableau de bord)
+        let currentService = 'all'; 
 
         // DOM Elements
         const taskForm = document.getElementById('task-form');
         const formSection = document.getElementById('form-section');
-        const tabs = document.querySelectorAll('.tab-item');
+        const tabsContainer = document.getElementById('services-tabs');
 
         const refreshIcons = () => {
             if (window.lucide) {
@@ -175,23 +176,31 @@
             }
         };
 
-        // GESTION DES ONGLETS
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                currentService = tab.getAttribute('data-service');
-                
-                // Masquer le formulaire sur le tableau de bord (all) car on ne sait pas quel service attribuer
-                if (currentService === 'all') {
-                    formSection.classList.add('hidden');
-                } else {
-                    formSection.classList.remove('hidden');
-                }
-                
-                renderTasks();
+        // GESTION DES ONGLETS (Refactorisée pour plus de fiabilité)
+        function setupTabs() {
+            const tabs = tabsContainer.querySelectorAll('.tab-item');
+            tabs.forEach(tab => {
+                tab.onclick = (e) => {
+                    const selectedService = tab.getAttribute('data-service');
+                    if (!selectedService) return;
+
+                    // Mise à jour visuelle immédiate
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    currentService = selectedService;
+                    
+                    // Affichage/Masquage du formulaire
+                    if (currentService === 'all') {
+                        formSection.classList.add('hidden');
+                    } else {
+                        formSection.classList.remove('hidden');
+                    }
+                    
+                    renderTasks();
+                };
             });
-        });
+        }
 
         // AUTHENTIFICATION
         const initAuth = async () => {
@@ -205,7 +214,6 @@
                 console.error("Erreur d'authentification:", error);
             }
         };
-        initAuth();
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -232,14 +240,18 @@
             
             if (!titleEl.value || !currentUser || currentService === 'all') return;
 
-            await addDoc(tasksColl, {
-                title: titleEl.value,
-                priority: priorityEl.value,
-                status: 'todo',
-                service: currentService, // On lie la tâche au service actif
-                createdAt: Timestamp.now()
-            });
-            titleEl.value = '';
+            try {
+                await addDoc(tasksColl, {
+                    title: titleEl.value,
+                    priority: priorityEl.value,
+                    status: 'todo',
+                    service: currentService,
+                    createdAt: Timestamp.now()
+                });
+                titleEl.value = '';
+            } catch (err) {
+                console.error("Erreur lors de l'ajout:", err);
+            }
         }
 
         function renderTasks() {
@@ -248,11 +260,11 @@
                 doing: document.getElementById('col-doing'),
                 done: document.getElementById('col-done')
             };
+            
             if (!cols.todo) return;
             
             Object.values(cols).forEach(c => c.innerHTML = '');
 
-            // Filtrage : Si "all", on montre tout. Sinon, seulement le service sélectionné.
             const filteredTasks = currentService === 'all' 
                 ? tasksData 
                 : tasksData.filter(t => t.service === currentService);
@@ -267,7 +279,6 @@
                     low: 'text-blue-600 bg-blue-50' 
                 };
 
-                // Badge de service visible uniquement sur le tableau de bord global
                 const serviceBadge = currentService === 'all' 
                     ? `<span class="text-[9px] font-bold text-slate-400 border border-slate-200 px-2 py-0.5 rounded-md uppercase">${task.service || 'Général'}</span>` 
                     : '';
@@ -278,18 +289,26 @@
                             <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${pColor[task.priority]}">${task.priority}</span>
                             ${serviceBadge}
                         </div>
-                        <button onclick="window.deleteTaskActionItem('${task.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">
+                        <button class="delete-btn text-slate-300 hover:text-rose-500 transition-colors" data-id="${task.id}">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
                     <p class="font-bold text-slate-800 text-sm leading-snug">${task.title}</p>
                     <div class="flex gap-1.5 mt-2">
-                        ${task.status !== 'todo' ? `<button onclick="window.moveTask('${task.id}', 'todo')" class="text-[9px] font-bold bg-slate-100 px-2 py-1.5 rounded-lg text-slate-500 hover:bg-slate-200 uppercase">Backlog</button>` : ''}
-                        ${task.status !== 'doing' ? `<button onclick="window.moveTask('${task.id}', 'doing')" class="text-[9px] font-bold bg-indigo-50 px-2 py-1.5 rounded-lg text-indigo-600 hover:bg-indigo-100 uppercase">Prod</button>` : ''}
-                        ${task.status !== 'done' ? `<button onclick="window.moveTask('${task.id}', 'done')" class="text-[9px] font-bold bg-emerald-50 px-2 py-1.5 rounded-lg text-emerald-600 hover:bg-emerald-100 uppercase">Terminé</button>` : ''}
+                        ${task.status !== 'todo' ? `<button class="move-btn text-[9px] font-bold bg-slate-100 px-2 py-1.5 rounded-lg text-slate-500 hover:bg-slate-200 uppercase" data-id="${task.id}" data-status="todo">Backlog</button>` : ''}
+                        ${task.status !== 'doing' ? `<button class="move-btn text-[9px] font-bold bg-indigo-50 px-2 py-1.5 rounded-lg text-indigo-600 hover:bg-indigo-100 uppercase" data-id="${task.id}" data-status="doing">Prod</button>` : ''}
+                        ${task.status !== 'done' ? `<button class="move-btn text-[9px] font-bold bg-emerald-50 px-2 py-1.5 rounded-lg text-emerald-600 hover:bg-emerald-100 uppercase" data-id="${task.id}" data-status="done">Terminé</button>` : ''}
                     </div>
                 `;
                 cols[task.status].appendChild(card);
+            });
+
+            // Attachement des événements sur les boutons générés
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.onclick = () => window.deleteTaskActionItem(btn.dataset.id);
+            });
+            document.querySelectorAll('.move-btn').forEach(btn => {
+                btn.onclick = () => window.moveTask(btn.dataset.id, btn.dataset.status);
             });
 
             document.getElementById('todo-count').innerText = filteredTasks.filter(t => t.status === 'todo').length;
@@ -299,15 +318,18 @@
         }
 
         window.moveTask = (id, status) => updateDoc(doc(tasksColl, id), { status });
-        window.deleteTaskActionItem = (id) => deleteDoc(doc(tasksColl, id));
+        window.deleteTaskActionItem = (id) => {
+            if(confirm("Supprimer cette tâche ?")) deleteDoc(doc(tasksColl, id));
+        };
 
         if (taskForm) taskForm.addEventListener('submit', handleAddTask);
         
-        window.onload = () => {
-            // Initialisation du formulaire (masqué par défaut sur Tableau de bord)
-            if (currentService === 'all') formSection.classList.add('hidden');
+        // Initialisation propre
+        window.addEventListener('load', () => {
+            initAuth();
+            setupTabs();
             refreshIcons();
-        };
+        });
     </script>
 </body>
 </html>
