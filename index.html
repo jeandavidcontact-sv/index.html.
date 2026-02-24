@@ -32,6 +32,11 @@
         .nav-tab {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            padding: 0.85rem 1.5rem;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .nav-tab.active {
@@ -113,7 +118,6 @@
             transform: scale(0.95);
         }
 
-        /* Style pour les champs éditables */
         .editable-text:focus {
             outline: none;
             background: rgba(79, 70, 229, 0.05);
@@ -121,10 +125,31 @@
             box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
         }
 
+        /* Amélioration du sélecteur de date */
+        .date-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            background: #f8fafc;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .date-container:hover {
+            border-color: #4f46e5;
+            background: white;
+        }
+
         input[type="date"] {
-            color-scheme: light;
-            border: none;
-            background: transparent;
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
             cursor: pointer;
         }
 
@@ -158,6 +183,15 @@
         .animate-card {
             animation: slideIn 0.5s ease forwards;
         }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .late-badge {
+            animation: pulse-red 2s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="p-4 md:p-10">
@@ -176,7 +210,7 @@
             <nav id="tabs-container" class="flex items-center gap-2 overflow-x-auto flex-grow px-2">
                 <!-- Onglets injectés ici -->
             </nav>
-            <button id="add-tab-btn" class="flex items-center gap-2 px-5 py-2.5 text-white bg-indigo-600 hover:bg-indigo-700 font-semibold text-xs uppercase tracking-widest rounded-2xl transition-all shadow-md active:scale-95">
+            <button id="add-tab-btn" class="flex items-center gap-2 px-6 py-3 text-white bg-indigo-600 hover:bg-indigo-700 font-semibold text-xs uppercase tracking-widest rounded-2xl transition-all shadow-md active:scale-95 ml-2">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">Nouveau Projet</span>
             </button>
@@ -188,7 +222,6 @@
         
     </div>
 
-    <!-- Modale de Confirmation -->
     <div id="confirm-modal">
         <div class="modal-card">
             <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-6 mx-auto">
@@ -226,14 +259,8 @@
             'done': { label: 'Terminée', bg: 'bg-emerald-100', text: 'text-emerald-700' }
         };
 
-        // Données d'exemple
         let tabs = [
-            { 
-                id: 'dashboard', 
-                title: 'Tableau de bord', 
-                isDashboard: true,
-                categories: [] 
-            },
+            { id: 'dashboard', title: 'Tableau de bord', isDashboard: true, categories: [] },
             { 
                 id: 'tab2', 
                 title: 'Projets Clients', 
@@ -290,37 +317,40 @@
             tabs.forEach(tab => {
                 const isActive = tab.id === activeTabId;
                 const tabEl = document.createElement('div');
-                tabEl.className = `nav-tab flex items-center gap-2 px-4 py-2.5 rounded-2xl cursor-pointer font-semibold text-[11px] uppercase tracking-widest ${isActive ? 'active' : 'text-slate-500'}`;
+                tabEl.className = `nav-tab rounded-2xl cursor-pointer font-semibold text-[11px] uppercase tracking-widest ${isActive ? 'active' : 'text-slate-500'}`;
                 
                 const label = document.createElement('span');
                 label.className = 'editable-text outline-none whitespace-nowrap px-1';
-                // L'utilisateur peut éditer tous les onglets sauf le dashboard
-                label.contentEditable = !tab.isDashboard; 
+                label.contentEditable = "false";
                 label.innerText = tab.title;
                 
-                label.onblur = () => {
-                    const newTitle = label.innerText.trim();
-                    if(!tab.isDashboard && newTitle) {
-                        tab.title = newTitle;
-                        // On ne render que si le titre a vraiment changé pour éviter de perdre le focus
-                    } else if (!newTitle) {
-                        label.innerText = tab.title;
-                    }
+                tabEl.onclick = (e) => {
+                    if (label.contentEditable === "true") return;
+                    activeTabId = tab.id;
+                    render();
                 };
 
-                label.onkeydown = (e) => { 
-                    if(e.key === 'Enter') { 
-                        e.preventDefault(); 
-                        label.blur(); 
-                    } 
+                tabEl.ondblclick = (e) => {
+                    if (tab.isDashboard) return;
+                    e.stopPropagation();
+                    label.contentEditable = "true";
+                    label.focus();
                 };
+
+                label.onblur = () => {
+                    const newTitle = label.innerText.trim();
+                    if(!tab.isDashboard && newTitle) tab.title = newTitle;
+                    label.contentEditable = "false";
+                };
+
+                label.onkeydown = (e) => { if(e.key === 'Enter') { e.preventDefault(); label.blur(); } };
                 
                 tabEl.appendChild(label);
 
                 if (!tab.isDashboard) {
                     const del = document.createElement('button');
-                    del.className = 'saas-delete-btn ml-2 p-1';
-                    del.innerHTML = '<i data-lucide="x" class="w-3.5 h-3.5"></i>';
+                    del.className = 'saas-delete-btn ml-3 p-1';
+                    del.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
                     del.onclick = (e) => { 
                         e.stopPropagation(); 
                         requestConfirmation(() => deleteTab(tab.id));
@@ -328,12 +358,6 @@
                     tabEl.appendChild(del);
                 }
 
-                tabEl.onclick = (e) => { 
-                    // Si on clique sur le texte éditable, on ne change pas d'onglet immédiatement
-                    if (e.target === label && label.contentEditable === "true") return;
-                    activeTabId = tab.id; 
-                    render(); 
-                };
                 container.appendChild(tabEl);
             });
         }
@@ -343,18 +367,7 @@
             if (!activeTab) return;
 
             if (activeTab.isDashboard) {
-                contentArea.innerHTML = `
-                    <div class="max-w-4xl">
-                        <h2 class="text-4xl font-extrabold text-slate-900 mb-6">Tableau de bord</h2>
-                        <p class="text-slate-500 text-lg">Suivi global de l'activité DAVID MÉDICAL.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-                            <div class="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-                                <div class="text-indigo-600 font-extrabold text-5xl mb-2">${tabs.length - 1}</div>
-                                <div class="text-slate-400 uppercase text-[10px] tracking-[0.2em] font-black">Projets en cours</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                contentArea.innerHTML = `<div class="max-w-4xl"><h2 class="text-4xl font-extrabold text-slate-900 mb-6">Tableau de bord</h2><p class="text-slate-500 text-lg">Suivi global de l'activité DAVID MÉDICAL.</p><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12"><div class="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100"><div class="text-indigo-600 font-extrabold text-5xl mb-2">${tabs.length - 1}</div><div class="text-slate-400 uppercase text-[10px] tracking-[0.2em] font-black">Projets en cours</div></div></div></div>`;
                 return;
             }
 
@@ -362,18 +375,13 @@
                 <div class="flex flex-col gap-10">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
                         <div>
-                            <h2 class="text-4xl font-black text-slate-900 tracking-tight leading-none editable-text inline-block" 
-                                contenteditable="true"
-                                onblur="window.updateTabTitle('${activeTab.id}', this.innerText)">
-                                ${activeTab.title}
-                            </h2>
+                            <h2 class="text-4xl font-black text-slate-900 tracking-tight leading-none editable-text inline-block" contenteditable="true" onblur="window.updateTabTitle('${activeTab.id}', this.innerText)">${activeTab.title}</h2>
                             <p class="text-slate-400 text-xs uppercase tracking-widest mt-3 font-bold">Projet Actif</p>
                         </div>
                         <button onclick="window.addCategory()" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-[1.2rem] text-[10px] font-black uppercase tracking-[0.15em] hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95">
                             <i data-lucide="plus-circle" class="w-4 h-4"></i> Ajouter Section
                         </button>
                     </div>
-                    
                     <div class="grid grid-cols-1 xl:grid-cols-2 gap-10" id="categories-grid">
                         ${activeTab.categories.map((cat, idx) => renderCategory(cat, idx)).join('')}
                     </div>
@@ -393,86 +401,53 @@
 
         function renderCategory(cat, index) {
             const sortedTasks = getSortedTasks(cat.tasks);
+            const today = new Date().toISOString().split('T')[0];
 
             return `
                 <div class="category-card p-10 flex flex-col gap-8 animate-card" style="animation-delay: ${index * 0.1}s">
                     <div class="flex items-center justify-between gap-4">
-                        <input type="text" value="${cat.title}" 
-                            class="font-black text-slate-900 text-2xl outline-none w-full bg-transparent focus:text-indigo-600 transition-colors"
-                            onblur="window.updateCategoryTitle('${cat.id}', this.value)"
-                            onkeydown="if(event.key === 'Enter') this.blur()"
-                            placeholder="Nom de la catégorie...">
-                        <button onclick="window.confirmDeleteCategory('${cat.id}')" 
-                                class="saas-delete-btn p-2">
-                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                        </button>
+                        <input type="text" value="${cat.title}" class="font-black text-slate-900 text-2xl outline-none w-full bg-transparent focus:text-indigo-600 transition-colors" onblur="window.updateCategoryTitle('${cat.id}', this.value)" onkeydown="if(event.key === 'Enter') this.blur()" placeholder="Nom de la catégorie...">
+                        <button onclick="window.confirmDeleteCategory('${cat.id}')" class="saas-delete-btn p-2"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
-                    
                     <div class="flex flex-col gap-4">
                         ${sortedTasks.map(task => {
                             const state = STATES[task.status] || STATES['todo'];
                             const isDone = task.status === 'done';
+                            const isLate = !isDone && task.date && task.date < today;
 
                             return `
                                 <div class="task-item flex items-center justify-between gap-4 group ${isDone ? 'task-done' : ''}">
                                     <div class="flex flex-col gap-2 flex-grow">
-                                        <input type="text" value="${task.text}" 
-                                            class="text-base font-bold text-slate-700 outline-none bg-transparent focus:text-indigo-600"
-                                            onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)"
-                                            onkeydown="if(event.key === 'Enter') this.blur()"
-                                            placeholder="Que faut-il faire ?">
-                                        
+                                        <input type="text" value="${task.text}" class="text-base font-bold text-slate-700 outline-none bg-transparent focus:text-indigo-600" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)" onkeydown="if(event.key === 'Enter') this.blur()" placeholder="Que faut-il faire ?">
                                         <div class="flex items-center gap-3">
-                                            <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100 hover:border-indigo-200 transition-colors cursor-pointer relative">
+                                            <!-- Zone de date interactive améliorée -->
+                                            <div class="date-container">
                                                 <i data-lucide="calendar" class="w-3 h-3 text-slate-400"></i>
                                                 <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter">
                                                     ${task.date ? task.date.split('-').reverse().join('/') : 'Définir date'}
                                                 </span>
-                                                <input type="date" value="${task.date || ''}"
-                                                    class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                                                    onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
+                                                <input type="date" value="${task.date || ''}" onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
                                             </div>
+                                            ${isLate ? `<div class="late-badge flex items-center gap-1 bg-rose-500 text-white px-2 py-0.5 rounded-full shadow-lg shadow-rose-100"><i data-lucide="alert-circle" class="w-3 h-3"></i><span class="text-[9px] font-black uppercase tracking-widest">Retard</span></div>` : ''}
                                         </div>
                                     </div>
-                                    
                                     <div class="flex items-center gap-4">
-                                        <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" 
-                                             class="status-badge shadow-sm ${state.bg} ${state.text}">
-                                            ${state.label}
-                                        </div>
-                                        
-                                        <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}')" 
-                                                class="saas-delete-btn opacity-0 group-hover:opacity-100 focus:opacity-100 p-2">
-                                            <i data-lucide="x" class="w-4 h-4"></i>
-                                        </button>
+                                        <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" class="status-badge shadow-sm ${state.bg} ${state.text}">${state.label}</div>
+                                        <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}')" class="saas-delete-btn opacity-0 group-hover:opacity-100 focus:opacity-100 p-2"><i data-lucide="x" class="w-4 h-4"></i></button>
                                     </div>
-                                </div>
-                            `;
+                                </div>`;
                         }).join('')}
-                        
                         <div class="mt-6 flex items-center gap-4">
-                            <input type="text" 
-                                   placeholder="Nouvelle tâche..." 
-                                   class="flex-grow bg-[#f8fafc] px-6 py-4 rounded-2xl text-xs font-bold outline-none focus:bg-indigo-50/30 focus:ring-2 focus:ring-indigo-100 transition-all border border-transparent"
-                                   onkeydown="if(event.key === 'Enter') { window.addTask('${cat.id}', this.value); this.value=''; }">
-                            <button onclick="const input = this.previousElementSibling; if(input.value) { window.addTask('${cat.id}', input.value); input.value=''; }" 
-                                    class="bg-slate-900 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-all">
-                                <i data-lucide="plus" class="w-6 h-6"></i>
-                            </button>
+                            <input type="text" placeholder="Nouvelle tâche..." class="flex-grow bg-[#f8fafc] px-6 py-4 rounded-2xl text-xs font-bold outline-none focus:bg-indigo-50/30 focus:ring-2 focus:ring-indigo-100 transition-all border border-transparent" onkeydown="if(event.key === 'Enter') { window.addTask('${cat.id}', this.value); this.value=''; }">
+                            <button onclick="const input = this.previousElementSibling; if(input.value) { window.addTask('${cat.id}', input.value); input.value=''; }" class="bg-slate-900 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg hover:bg-indigo-600 hover:scale-105 active:scale-95 transition-all"><i data-lucide="plus" class="w-6 h-6"></i></button>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
-
-        // --- ACTIONS ---
 
         window.updateTabTitle = (tabId, newTitle) => {
             const tab = tabs.find(t => t.id === tabId);
-            if (tab && newTitle.trim()) {
-                tab.title = newTitle.trim();
-                renderTabs(); // On rafraîchit les onglets pour synchroniser
-            }
+            if (tab && newTitle.trim()) { tab.title = newTitle.trim(); renderTabs(); }
         };
 
         window.confirmDeleteCategory = (catId) => {
@@ -497,8 +472,7 @@
             const cat = activeTab.categories.find(c => c.id === catId);
             const task = cat.tasks.find(t => t.id === taskId);
             const statusOrder = ['todo', 'in-progress', 'done'];
-            let currentIndex = statusOrder.indexOf(task.status);
-            task.status = statusOrder[(currentIndex + 1) % statusOrder.length];
+            task.status = statusOrder[(statusOrder.indexOf(task.status) + 1) % statusOrder.length];
             render();
         };
 
@@ -512,11 +486,7 @@
 
         window.addCategory = () => {
             const activeTab = tabs.find(t => t.id === activeTabId);
-            activeTab.categories.push({
-                id: 'cat' + Date.now(),
-                title: 'Nouvelle Section',
-                tasks: []
-            });
+            activeTab.categories.push({ id: 'cat' + Date.now(), title: 'Nouvelle Section', tasks: [] });
             render();
         };
 
@@ -529,12 +499,7 @@
         window.addTask = (catId, text = '') => {
             const activeTab = tabs.find(t => t.id === activeTabId);
             const cat = activeTab.categories.find(c => c.id === catId);
-            cat.tasks.push({
-                id: 'task' + Date.now(),
-                text: text || 'Nouvelle tâche',
-                status: 'todo',
-                date: new Date().toISOString().split('T')[0]
-            });
+            cat.tasks.push({ id: 'task' + Date.now(), text: text || 'Nouvelle tâche', status: 'todo', date: new Date().toISOString().split('T')[0] });
             render();
         };
 
@@ -556,7 +521,7 @@
             tabs.push({ id: newId, title: 'Nouveau Projet', isDashboard: false, categories: [] });
             activeTabId = newId;
             render();
-        }
+        };
 
         async function initAuth() {
             try { await signInAnonymously(auth); render(); } catch (e) { render(); }
