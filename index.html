@@ -7,228 +7,261 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
         }
 
         .premium-header {
-            background: #111827;
+            background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
             border-radius: 2rem;
-            margin-bottom: 2rem;
         }
 
-        /* Kanban styling */
         .task-card { 
-            transition: transform 0.2s, box-shadow 0.2s; 
-            border: 1px solid #f1f5f9;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
         
         .task-card:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.08); 
-        }
-
-        .column-header {
-            font-size: 0.75rem;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            color: #94a3b8;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 0.5rem;
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); 
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
 
     <div id="app" class="max-w-7xl mx-auto">
         
-        <!-- Header -->
-        <header class="premium-header text-white p-10 md:p-14 shadow-xl text-center">
-            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tighter uppercase">
-                DAVID MÉDICAL
-            </h1>
+        <!-- Header Minimaliste David Médical -->
+        <header class="premium-header text-white p-12 md:p-16 mb-10 shadow-2xl relative overflow-hidden flex items-center justify-center">
+            <!-- Effet de halo subtil en arrière-plan -->
+            <div class="absolute inset-0 bg-indigo-500/5 blur-3xl rounded-full transform scale-150"></div>
+            
+            <div class="relative z-10 text-center">
+                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter uppercase">
+                    DAVID MÉDICAL
+                </h1>
+            </div>
         </header>
 
-        <!-- Formulaire d'ajout rapide -->
-        <section class="mb-10 bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
-            <form id="task-form" class="flex flex-col md:flex-row gap-3">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Progression</p>
+                <h3 id="progress-percent" class="text-2xl font-bold text-indigo-600">0%</h3>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">En cours</p>
+                <h3 id="doing-count-stat" class="text-2xl font-bold text-amber-500">0</h3>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Terminées</p>
+                <h3 id="completed-tasks-count" class="text-2xl font-bold text-emerald-500">0</h3>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Total</p>
+                <h3 id="total-tasks-count" class="text-2xl font-bold text-slate-700">0</h3>
+            </div>
+        </div>
+
+        <!-- Add Task Form -->
+        <section class="mb-10 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <form id="task-form" class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1 relative">
-                    <i data-lucide="edit-3" class="absolute left-4 top-3.5 w-5 h-5 text-slate-400"></i>
-                    <input type="text" id="task-title" placeholder="Quelle est la mission ?" required
-                        class="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-slate-900 focus:outline-none transition-all">
+                    <i data-lucide="plus" class="absolute left-4 top-3 w-5 h-5 text-slate-400"></i>
+                    <input type="text" id="task-title" placeholder="Nouvelle mission..." required
+                        class="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
                 </div>
-                <select id="task-priority" class="px-5 py-3.5 bg-slate-50 border-none rounded-2xl font-bold text-slate-600 appearance-none cursor-pointer">
+                <select id="task-priority" class="px-6 py-3 bg-slate-50 border-none rounded-2xl focus:outline-none font-medium text-slate-600 cursor-pointer">
                     <option value="low">Basse</option>
                     <option value="medium" selected>Moyenne</option>
                     <option value="high">Haute</option>
                 </select>
-                <button type="submit" class="bg-slate-900 hover:bg-black text-white px-8 py-3.5 rounded-2xl font-bold transition-all shadow-lg">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
                     Ajouter
                 </button>
             </form>
         </section>
 
-        <!-- Tableau Kanban -->
+        <!-- Kanban Board -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Colonne 1 -->
-            <div>
-                <div class="column-header">
-                    <span>Backlog</span>
-                    <span id="todo-count" class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md text-[10px]">0</span>
-                </div>
-                <div id="col-todo" class="space-y-4 min-h-[300px]"></div>
+            <div class="kanban-column">
+                <h3 class="font-extrabold text-slate-400 mb-6 flex items-center justify-between px-2 text-sm tracking-widest uppercase">
+                    Backlog <span class="bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-[10px]" id="todo-count">0</span>
+                </h3>
+                <div id="col-todo" class="space-y-4 min-h-[200px]"></div>
             </div>
-            <!-- Colonne 2 -->
-            <div>
-                <div class="column-header">
-                    <span class="text-indigo-600">Production</span>
-                    <span id="doing-count" class="bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-md text-[10px]">0</span>
-                </div>
-                <div id="col-doing" class="space-y-4 min-h-[300px]"></div>
+            <div class="kanban-column">
+                <h3 class="font-extrabold text-indigo-500 mb-6 flex items-center justify-between px-2 text-sm tracking-widest uppercase">
+                    Production <span class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px]" id="doing-count">0</span>
+                </h3>
+                <div id="col-doing" class="space-y-4 min-h-[200px]"></div>
             </div>
-            <!-- Colonne 3 -->
-            <div>
-                <div class="column-header">
-                    <span class="text-emerald-600">Terminé</span>
-                    <span id="done-count" class="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-md text-[10px]">0</span>
-                </div>
-                <div id="col-done" class="space-y-4 min-h-[300px]"></div>
+            <div class="kanban-column">
+                <h3 class="font-extrabold text-emerald-500 mb-6 flex items-center justify-between px-2 text-sm tracking-widest uppercase">
+                    Terminé <span class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px]" id="done-count">0</span>
+                </h3>
+                <div id="col-done" class="space-y-4 min-h-[200px]"></div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuration Firebase
-        const firebaseConfig = JSON.parse(__firebase_config);
+        const firebaseConfig = {
+            apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
+            authDomain: "capdavid-5cb65.firebaseapp.com",
+            databaseURL: "https://capdavid-5cb65-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "capdavid-5cb65",
+            storageBucket: "capdavid-5cb65.firebasestorage.app",
+            messagingSenderId: "346917679110",
+            appId: "1:346917679110:web:2b76ad31621eec618ed387",
+            measurementId: "G-GHTM9M5WCD"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'david-medical-pro';
-
-        const tasksColl = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
+        
+        const appId = "david-medical-tracker";
+        const tasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
 
         let currentUser = null;
-        let tasksData = [];
 
-        // DOM Elements
         const taskForm = document.getElementById('task-form');
+        const taskTitleInput = document.getElementById('task-title');
+        const taskPriorityInput = document.getElementById('task-priority');
 
         const refreshIcons = () => {
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         };
 
-        // AUTHENTIFICATION
-        const initAuth = async () => {
+        async function initAuth() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
             } catch (error) {
-                console.error("Erreur d'authentification:", error);
+                console.error("Auth error:", error);
             }
-        };
-        initAuth();
+        }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                startListeners();
+                subscribeToTasks();
             }
         });
 
-        // ÉCOUTEURS FIRESTORE
-        function startListeners() {
-            if (!currentUser) return;
-
-            // Écoute des tâches (page unique)
-            onSnapshot(tasksColl, (snap) => {
-                tasksData = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                renderTasks();
-            }, (err) => console.error("Erreur de synchro Tâches:", err));
-        }
-
-        // GESTION DES TÂCHES
-        async function handleAddTask(e) {
-            e.preventDefault();
-            const titleEl = document.getElementById('task-title');
-            const priorityEl = document.getElementById('task-priority');
-            
-            if (!titleEl.value || !currentUser) return;
-
-            await addDoc(tasksColl, {
-                title: titleEl.value,
-                priority: priorityEl.value,
-                status: 'todo',
-                createdAt: Timestamp.now()
+        function subscribeToTasks() {
+            onSnapshot(tasksCollection, (snapshot) => {
+                const tasks = [];
+                snapshot.forEach((doc) => {
+                    tasks.push({ id: doc.id, ...doc.data() });
+                });
+                renderTasks(tasks);
+                updateStats(tasks);
+            }, (error) => {
+                console.error("Firestore error:", error);
             });
-            titleEl.value = '';
         }
 
-        function renderTasks() {
+        async function addTask(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+            const title = taskTitleInput.value.trim();
+            const priority = taskPriorityInput.value;
+            if (title) {
+                await addDoc(tasksCollection, {
+                    title,
+                    priority,
+                    status: 'todo',
+                    createdAt: Timestamp.now(),
+                    createdBy: currentUser.uid
+                });
+                taskTitleInput.value = '';
+            }
+        }
+
+        async function updateTaskStatus(id, newStatus) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id);
+            await updateDoc(docRef, { status: newStatus });
+        }
+
+        async function deleteTask(id) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id);
+            await deleteDoc(docRef);
+        }
+
+        function renderTasks(tasks) {
             const cols = {
                 todo: document.getElementById('col-todo'),
                 doing: document.getElementById('col-doing'),
                 done: document.getElementById('col-done')
             };
-            if (!cols.todo) return;
-            
-            Object.values(cols).forEach(c => c.innerHTML = '');
-
-            tasksData.forEach(task => {
-                const card = document.createElement('div');
-                card.className = "task-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3";
-                
-                const pColor = { 
-                    high: 'text-rose-600 bg-rose-50', 
-                    medium: 'text-amber-600 bg-amber-50', 
-                    low: 'text-blue-600 bg-blue-50' 
-                };
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${pColor[task.priority]}">${task.priority}</span>
-                        <button onclick="window.deleteTaskActionItem('${task.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                    <p class="font-bold text-slate-800 text-sm leading-snug">${task.title}</p>
-                    <div class="flex gap-1.5 mt-2">
-                        ${task.status !== 'todo' ? `<button onclick="window.moveTask('${task.id}', 'todo')" class="text-[9px] font-bold bg-slate-100 px-2 py-1.5 rounded-lg text-slate-500 hover:bg-slate-200 uppercase">Backlog</button>` : ''}
-                        ${task.status !== 'doing' ? `<button onclick="window.moveTask('${task.id}', 'doing')" class="text-[9px] font-bold bg-indigo-50 px-2 py-1.5 rounded-lg text-indigo-600 hover:bg-indigo-100 uppercase">Prod</button>` : ''}
-                        ${task.status !== 'done' ? `<button onclick="window.moveTask('${task.id}', 'done')" class="text-[9px] font-bold bg-emerald-50 px-2 py-1.5 rounded-lg text-emerald-600 hover:bg-emerald-100 uppercase">Terminé</button>` : ''}
-                    </div>
-                `;
-                cols[task.status].appendChild(card);
+            if (cols.todo) Object.values(cols).forEach(el => el.innerHTML = '');
+            tasks.forEach(task => {
+                const card = createTaskCard(task);
+                if (cols[task.status]) cols[task.status].appendChild(card);
             });
-
-            document.getElementById('todo-count').innerText = tasksData.filter(t => t.status === 'todo').length;
-            document.getElementById('doing-count').innerText = tasksData.filter(t => t.status === 'doing').length;
-            document.getElementById('done-count').innerText = tasksData.filter(t => t.status === 'done').length;
             refreshIcons();
+            
+            document.getElementById('todo-count').innerText = tasks.filter(t => t.status === 'todo').length;
+            document.getElementById('doing-count').innerText = tasks.filter(t => t.status === 'doing').length;
+            document.getElementById('done-count').innerText = tasks.filter(t => t.status === 'done').length;
         }
 
-        window.moveTask = (id, status) => updateDoc(doc(tasksColl, id), { status });
-        window.deleteTaskActionItem = (id) => deleteDoc(doc(tasksColl, id));
+        function createTaskCard(task) {
+            const div = document.createElement('div');
+            div.className = 'task-card bg-white p-5 rounded-2xl shadow-sm border border-slate-100 group';
+            
+            const priorityStyles = {
+                low: 'bg-blue-50 text-blue-600',
+                medium: 'bg-amber-50 text-amber-600',
+                high: 'bg-rose-50 text-rose-600'
+            };
 
-        if (taskForm) taskForm.addEventListener('submit', handleAddTask);
-        
-        window.onload = () => {
-            refreshIcons();
-        };
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${priorityStyles[task.priority]}">
+                        ${task.priority}
+                    </span>
+                    <button class="text-slate-200 hover:text-rose-500 transition-colors delete-btn">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-5 leading-tight">${task.title}</h4>
+                <div class="flex flex-wrap gap-2">
+                    ${task.status !== 'todo' ? `<button class="move-todo text-[10px] font-bold bg-slate-50 hover:bg-slate-100 p-2 rounded-xl text-slate-500 uppercase tracking-tighter">Attente</button>` : ''}
+                    ${task.status !== 'doing' ? `<button class="move-doing text-[10px] font-bold bg-indigo-50 hover:bg-indigo-100 p-2 rounded-xl text-indigo-600 uppercase tracking-tighter">Prod</button>` : ''}
+                    ${task.status !== 'done' ? `<button class="move-done text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 p-2 rounded-xl text-emerald-600 uppercase tracking-tighter">Finir</button>` : ''}
+                </div>
+            `;
+
+            div.querySelector('.delete-btn').onclick = () => deleteTask(task.id);
+            if(div.querySelector('.move-todo')) div.querySelector('.move-todo').onclick = () => updateTaskStatus(task.id, 'todo');
+            if(div.querySelector('.move-doing')) div.querySelector('.move-doing').onclick = () => updateTaskStatus(task.id, 'doing');
+            if(div.querySelector('.move-done')) div.querySelector('.move-done').onclick = () => updateTaskStatus(task.id, 'done');
+
+            return div;
+        }
+
+        function updateStats(tasks) {
+            const total = tasks.length;
+            const done = tasks.filter(t => t.status === 'done').length;
+            const doing = tasks.filter(t => t.status === 'doing').length;
+            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+            document.getElementById('progress-percent').innerText = `${percent}%`;
+            document.getElementById('doing-count-stat').innerText = doing;
+            document.getElementById('completed-tasks-count').innerText = done;
+            document.getElementById('total-tasks-count').innerText = total;
+        }
+
+        if (taskForm) taskForm.addEventListener('submit', addTask);
+        window.addEventListener('load', refreshIcons);
+        initAuth();
     </script>
 </body>
 </html>
