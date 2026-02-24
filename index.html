@@ -72,7 +72,6 @@
             color: #ef4444;
         }
 
-        /* Amélioration des cartes de catégories */
         .category-card {
             background: white;
             border: 1px solid #f1f5f9;
@@ -103,7 +102,6 @@
             opacity: 1;
         }
 
-        /* Style des tâches personnalisé */
         .task-item {
             border-radius: 0.75rem;
             transition: all 0.2s ease;
@@ -113,21 +111,14 @@
             background: #f8fafc;
         }
 
-        .custom-checkbox {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #e2e8f0;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .status-badge {
             cursor: pointer;
             transition: all 0.2s ease;
+            user-select: none;
         }
 
-        .custom-checkbox.checked {
-            background: #4f46e5;
-            border-color: #4f46e5;
+        .status-badge:active {
+            transform: scale(0.95);
         }
 
         .tab-input:focus {
@@ -135,6 +126,12 @@
             background: #f8fafc;
             padding: 2px 6px;
             border-radius: 6px;
+        }
+
+        /* Masquer le calendrier par défaut de l'input date pour un look plus propre */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.4;
+            cursor: pointer;
         }
 
         #tabs-container::-webkit-scrollbar { display: none; }
@@ -182,6 +179,13 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
+        // États possibles : 'todo', 'in-progress', 'done'
+        const STATES = {
+            'todo': { label: 'À faire', bg: 'bg-slate-100', text: 'text-slate-600' },
+            'in-progress': { label: 'En cours', bg: 'bg-amber-100', text: 'text-amber-700' },
+            'done': { label: 'Terminé', bg: 'bg-emerald-100', text: 'text-emerald-700' }
+        };
+
         let tabs = [
             { 
                 id: 'dashboard', 
@@ -198,8 +202,8 @@
                         id: 'cat1',
                         title: 'Phase Initiale',
                         tasks: [
-                            { id: 't1', text: 'Analyse des besoins', completed: false },
-                            { id: 't2', text: 'Validation devis', completed: true }
+                            { id: 't1', text: 'Analyse des besoins', status: 'done', date: '2024-03-20' },
+                            { id: 't2', text: 'Validation devis', status: 'in-progress', date: '2024-03-25' }
                         ]
                     }
                 ] 
@@ -282,7 +286,7 @@
                         </button>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="categories-grid">
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8" id="categories-grid">
                         ${activeTab.categories.map(cat => renderCategory(cat)).join('')}
                     </div>
                 </div>
@@ -294,7 +298,7 @@
                 <div class="category-card rounded-[2.5rem] p-7 flex flex-col gap-6">
                     <div class="flex items-center justify-between gap-2">
                         <input type="text" value="${cat.title}" 
-                            class="font-extrabold text-slate-800 text-sm outline-none w-full bg-transparent focus:text-indigo-600 placeholder:text-slate-300"
+                            class="font-extrabold text-slate-800 text-base outline-none w-full bg-transparent focus:text-indigo-600 placeholder:text-slate-300"
                             onblur="window.updateCategoryTitle('${cat.id}', this.value)"
                             placeholder="Titre de catégorie">
                         <button onclick="window.deleteCategory('${cat.id}')" class="text-slate-300 hover:text-rose-500 p-2 transition-colors rounded-xl hover:bg-rose-50">
@@ -302,23 +306,36 @@
                         </button>
                     </div>
                     
-                    <div class="flex flex-col gap-1">
-                        ${cat.tasks.map(task => `
-                            <div class="task-item flex items-center gap-3 p-2 group">
-                                <div class="custom-checkbox ${task.completed ? 'checked' : ''}" 
-                                     onclick="window.toggleTask('${cat.id}', '${task.id}')">
-                                    ${task.completed ? '<i data-lucide="check" class="w-3 h-3 text-white"></i>' : ''}
+                    <div class="flex flex-col gap-2">
+                        ${cat.tasks.map(task => {
+                            const state = STATES[task.status] || STATES['todo'];
+                            return `
+                                <div class="task-item flex flex-col sm:flex-row sm:items-center gap-3 p-3 group">
+                                    <div class="flex items-center gap-3 flex-grow">
+                                        <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" 
+                                             class="status-badge px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap ${state.bg} ${state.text}">
+                                            ${state.label}
+                                        </div>
+                                        <input type="text" value="${task.text}" 
+                                            class="text-sm font-medium text-slate-600 outline-none flex-grow bg-transparent transition-all ${task.status === 'done' ? 'line-through opacity-40 italic' : ''}"
+                                            onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)"
+                                            placeholder="Description de la tâche">
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-4 pl-12 sm:pl-0 justify-between sm:justify-end">
+                                        <input type="date" value="${task.date || ''}"
+                                            class="text-[11px] font-bold text-slate-400 bg-transparent outline-none uppercase"
+                                            onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
+                                        
+                                        <button onclick="window.deleteTask('${cat.id}', '${task.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 p-1 transition-all">
+                                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <input type="text" value="${task.text}" 
-                                    class="text-[13px] font-medium text-slate-600 outline-none flex-grow bg-transparent transition-all ${task.completed ? 'line-through opacity-40 italic' : ''}"
-                                    onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
-                                <button onclick="window.deleteTask('${cat.id}', '${task.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 p-1 transition-all">
-                                    <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                         
-                        ${cat.tasks.length === 0 ? '<p class="text-[11px] text-slate-400 italic px-2 py-4">Aucune tâche pour le moment.</p>' : ''}
+                        ${cat.tasks.length === 0 ? '<p class="text-[11px] text-slate-400 italic px-3 py-4">Aucune tâche pour le moment.</p>' : ''}
                     </div>
                     
                     <button onclick="window.addTask('${cat.id}')" class="group mt-auto flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-400 hover:text-indigo-600 transition-all">
@@ -333,6 +350,24 @@
 
         // --- FONCTIONS GLOBALES ---
         
+        window.cycleStatus = (catId, taskId) => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            const cat = activeTab.categories.find(c => c.id === catId);
+            const task = cat.tasks.find(t => t.id === taskId);
+            
+            const statusOrder = ['todo', 'in-progress', 'done'];
+            let currentIndex = statusOrder.indexOf(task.status);
+            task.status = statusOrder[(currentIndex + 1) % statusOrder.length];
+            render();
+        };
+
+        window.updateTaskDate = (catId, taskId, newDate) => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            const cat = activeTab.categories.find(c => c.id === catId);
+            const task = cat.tasks.find(t => t.id === taskId);
+            task.date = newDate;
+        };
+
         window.addCategory = () => {
             const activeTab = tabs.find(t => t.id === activeTabId);
             activeTab.categories.push({
@@ -361,16 +396,9 @@
             cat.tasks.push({
                 id: 'task' + Date.now(),
                 text: '',
-                completed: false
+                status: 'todo',
+                date: new Date().toISOString().split('T')[0]
             });
-            render();
-        };
-
-        window.toggleTask = (catId, taskId) => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            const cat = activeTab.categories.find(c => c.id === catId);
-            const task = cat.tasks.find(t => t.id === taskId);
-            task.completed = !task.completed;
             render();
         };
 
