@@ -21,23 +21,31 @@
         }
 
         .nav-tab {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             position: relative;
         }
 
         .nav-tab.active {
+            background-color: #f8fafc;
             color: #6366f1;
+            border-bottom: 2px solid #6366f1;
         }
 
-        .nav-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: #6366f1;
-            border-radius: 2px;
+        .edit-btn, .delete-btn {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .nav-tab:hover .edit-btn, 
+        .nav-tab:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .tab-label-input:focus {
+            outline: none;
+            background: #f1f5f9;
+            padding: 2px 4px;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -56,40 +64,19 @@
             </div>
         </header>
 
-        <!-- Nouveau bandeau de navigation -->
-        <nav class="bg-white rounded-2xl shadow-sm border border-slate-100 p-2 mb-8 flex items-center gap-2 overflow-x-auto">
-            <button onclick="switchPage('dashboard')" id="tab-dashboard" class="nav-tab active px-6 py-2 text-sm font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-500">
-                Tableau de bord
+        <!-- Bandeau de Navigation Dynamique -->
+        <div class="flex items-center gap-2 mb-8 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+            <nav id="tabs-list" class="flex items-center gap-1 overflow-x-auto flex-grow">
+                <!-- Les onglets seront injectés ici -->
+            </nav>
+            <button id="add-tab" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Ajouter un onglet">
+                <i data-lucide="plus-circle" class="w-6 h-6"></i>
             </button>
-            <button onclick="switchPage('missions')" id="tab-missions" class="nav-tab px-6 py-2 text-sm font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-500">
-                Missions
-            </button>
-            <button onclick="switchPage('equipe')" id="tab-equipe" class="nav-tab px-6 py-2 text-sm font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-500">
-                Équipe
-            </button>
-            <button onclick="switchPage('parametres')" id="tab-parametres" class="nav-tab px-6 py-2 text-sm font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-500">
-                Paramètres
-            </button>
-        </nav>
+        </div>
 
-        <!-- Zone de contenu dynamique -->
-        <main id="main-content" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 min-h-[300px]">
-            <div id="page-dashboard">
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Bienvenue sur le tableau de bord</h2>
-                <p class="text-slate-500">Sélectionnez un onglet pour naviguer dans l'application.</p>
-            </div>
-            <div id="page-missions" class="hidden">
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Gestion des Missions</h2>
-                <p class="text-slate-500">Liste des projets en cours et terminés.</p>
-            </div>
-            <div id="page-equipe" class="hidden">
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Membres de l'Équipe</h2>
-                <p class="text-slate-500">Gérez les collaborateurs et les accès.</p>
-            </div>
-            <div id="page-parametres" class="hidden">
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Paramètres</h2>
-                <p class="text-slate-500">Configuration du compte et des notifications.</p>
-            </div>
+        <!-- Zone de Contenu Dynamique -->
+        <main id="tab-content" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 min-h-[400px]">
+            <!-- Le contenu de la page active s'affiche ici -->
         </main>
         
     </div>
@@ -98,7 +85,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
             authDomain: "capdavid-5cb65.firebaseapp.com",
@@ -113,6 +99,136 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
+        let tabs = [
+            { id: '1', title: 'Tableau de bord', content: 'Bienvenue sur votre espace de suivi.' },
+            { id: '2', title: 'Missions', content: 'Liste de vos missions en cours.' }
+        ];
+        let activeTabId = '1';
+        let editingTabId = null;
+
+        const tabsList = document.getElementById('tabs-list');
+        const tabContentArea = document.getElementById('tab-content');
+        const addTabBtn = document.getElementById('add-tab');
+
+        function render() {
+            tabsList.innerHTML = '';
+            tabs.forEach(tab => {
+                const isActive = tab.id === activeTabId;
+                const isEditing = tab.id === editingTabId;
+                
+                const tabEl = document.createElement('div');
+                tabEl.className = `nav-tab flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer font-bold text-sm uppercase tracking-wider ${isActive ? 'active' : 'text-slate-400 hover:bg-slate-50'}`;
+                
+                // Texte ou Input
+                if (isEditing) {
+                    const input = document.createElement('span');
+                    input.className = 'tab-label-input min-w-[50px]';
+                    input.contentEditable = true;
+                    input.innerText = tab.title;
+                    input.addEventListener('click', (e) => e.stopPropagation());
+                    input.addEventListener('keydown', (e) => { 
+                        if(e.key === 'Enter') { 
+                            e.preventDefault(); 
+                            saveEdit(tab.id, input.innerText); 
+                        } 
+                    });
+                    tabEl.appendChild(input);
+                    
+                    // Bouton Valider
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'text-emerald-500 hover:text-emerald-600';
+                    saveBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+                    saveBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        saveEdit(tab.id, input.innerText);
+                    };
+                    tabEl.appendChild(saveBtn);
+
+                    // Focus auto
+                    setTimeout(() => input.focus(), 0);
+                } else {
+                    const label = document.createElement('span');
+                    label.innerText = tab.title;
+                    tabEl.appendChild(label);
+
+                    // Bouton Crayon
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-btn text-slate-300 hover:text-indigo-500 transition-colors ml-1';
+                    editBtn.innerHTML = '<i data-lucide="pencil" class="w-3.5 h-3.5"></i>';
+                    editBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        editingTabId = tab.id;
+                        render();
+                    };
+                    tabEl.appendChild(editBtn);
+
+                    // Bouton supprimer
+                    if (tabs.length > 1) {
+                        const delBtn = document.createElement('button');
+                        delBtn.className = 'delete-btn text-slate-300 hover:text-rose-500 transition-colors';
+                        delBtn.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
+                        delBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            deleteTab(tab.id);
+                        };
+                        tabEl.appendChild(delBtn);
+                    }
+                }
+
+                tabEl.onclick = () => {
+                    if (!isEditing) {
+                        activeTabId = tab.id;
+                        editingTabId = null;
+                        render();
+                    }
+                };
+
+                tabsList.appendChild(tabEl);
+            });
+
+            renderContent();
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function saveEdit(id, newTitle) {
+            const tab = tabs.find(t => t.id === id);
+            if (tab) {
+                tab.title = newTitle.trim() || 'Sans titre';
+            }
+            editingTabId = null;
+            render();
+        }
+
+        function renderContent() {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            if (activeTab) {
+                tabContentArea.innerHTML = `
+                    <h2 class="text-3xl font-extrabold text-slate-800 mb-6">${activeTab.title}</h2>
+                    <div class="text-slate-500">${activeTab.content}</div>
+                `;
+            }
+        }
+
+        function deleteTab(id) {
+            tabs = tabs.filter(t => t.id !== id);
+            if (activeTabId === id) {
+                activeTabId = tabs[0].id;
+            }
+            render();
+        }
+
+        addTabBtn.onclick = () => {
+            const newId = Date.now().toString();
+            tabs.push({
+                id: newId,
+                title: 'Nouveau',
+                content: 'Contenu de la nouvelle page...'
+            });
+            activeTabId = newId;
+            editingTabId = newId; // Mode édition auto à la création
+            render();
+        };
+
         async function initAuth() {
             try {
                 await signInAnonymously(auth);
@@ -121,19 +237,8 @@
             }
         }
 
-        // Fonction de navigation globale
-        window.switchPage = (pageId) => {
-            // Masquer toutes les pages
-            document.querySelectorAll('#main-content > div').forEach(div => div.classList.add('hidden'));
-            // Afficher la page sélectionnée
-            document.getElementById(`page-${pageId}`).classList.remove('hidden');
-            
-            // Mettre à jour les styles des onglets
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(`tab-${pageId}`).classList.add('active');
-        };
-
         initAuth();
+        render();
     </script>
 </body>
 </html>
