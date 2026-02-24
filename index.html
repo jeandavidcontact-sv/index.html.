@@ -13,24 +13,24 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             margin: 0;
             padding: 0;
-            color: #334155;
-            background-color: #f8fafc;
+            color: #1e293b;
+            background-color: #fdfdfe; /* Fond très légèrement bleuté/blanc */
         }
 
         .premium-header {
-            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
-            border-radius: 2rem;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 2.5rem;
         }
 
         .glass-nav {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .nav-tab {
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             padding: 0.75rem 1.25rem;
             border-radius: 1rem;
@@ -39,68 +39,109 @@
         .nav-tab.active {
             background-color: #0f172a;
             color: white;
-            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
+            box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.2);
         }
 
-        /* Boutons de suppression forcés en rouge */
-        .saas-delete-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ef4444; /* Rouge par défaut */
-            transition: all 0.2s ease;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-        }
-
-        .saas-delete-btn:hover {
-            background-color: #fee2e2;
-            transform: scale(1.1);
-        }
-
-        .category-card {
-            background: #f1f5f9;
-            border-radius: 2rem;
-            border: 1px solid #e2e8f0;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        /* Modern Notification Bell */
+        .modern-notif {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
             transition: all 0.3s ease;
-            border-top: 4px solid #06b6d4;
+        }
+
+        .notif-pulse {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ef4444;
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            animation: pulse-ring-red 2s infinite;
+        }
+
+        @keyframes pulse-ring-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Modern Add Button */
+        .btn-modern-add {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-modern-add:hover {
+            filter: brightness(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -10px rgba(239, 68, 68, 0.5);
+        }
+
+        /* AMÉLIORATION CARTE SECTION (SAAS MODERNE) */
+        .category-card {
+            background: #ffffff;
+            border-radius: 1.75rem;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
         .category-card:hover {
-            border-color: #06b6d4;
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.08);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Lueur rouge discrète en haut de carte */
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ef4444, transparent);
+            opacity: 0.4;
         }
 
         .task-item {
-            border-radius: 1.25rem;
-            padding: 1rem 1.25rem;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
+            border-radius: 1rem;
+            padding: 1rem;
+            background: #fcfdfe;
+            border: 1px solid #f1f5f9;
+            transition: all 0.25s ease;
         }
 
         .task-item:hover {
-            border-color: #06b6d4;
+            background: #ffffff;
+            border-color: #ef444433;
+            transform: scale(1.01);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
         }
 
         .task-done {
             opacity: 0.6;
             background-color: #f8fafc;
-            border-color: #f1f5f9;
-            box-shadow: none;
+            filter: grayscale(0.5);
         }
 
         .status-badge {
             cursor: pointer;
-            font-size: 9px;
-            font-weight: 800;
-            padding: 0.4rem 0.8rem;
-            border-radius: 0.75rem;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.02em;
+            transition: all 0.2s ease;
+        }
+
+        .status-badge:hover {
+            filter: contrast(1.1);
         }
 
         .date-container {
@@ -108,34 +149,30 @@
             display: flex;
             align-items: center;
             gap: 0.4rem;
-            background: #f8fafc;
-            padding: 0.3rem 0.6rem;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            background: #f1f5f9;
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.6rem;
             font-size: 11px;
             font-weight: 600;
             color: #64748b;
+            transition: all 0.2s ease;
         }
 
-        .late-badge {
-            background: #fef2f2;
+        .date-container:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .saas-delete-btn {
+            color: #94a3b8;
+            transition: all 0.2s ease;
+            padding: 6px;
+            border-radius: 8px;
+        }
+
+        .saas-delete-btn:hover {
             color: #ef4444;
-            border: 1px solid #fee2e2;
-            padding: 0.2rem 0.5rem;
-            border-radius: 6px;
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            animation: pulse-soft 2s infinite;
-        }
-
-        @keyframes pulse-soft {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            background-color: #fee2e2;
         }
 
         #confirm-modal, #notif-modal, #late-info-modal {
@@ -143,7 +180,7 @@
             position: fixed;
             inset: 0;
             background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(12px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -151,19 +188,20 @@
 
         .modal-card {
             background: white;
-            padding: 2rem;
+            padding: 2.5rem;
             border-radius: 2rem;
             width: 90%;
-            max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 420px;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(226, 232, 240, 0.5);
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .animate-card {
-            animation: fadeIn 0.4s ease-out forwards;
+            animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
     </style>
 </head>
@@ -171,67 +209,68 @@
 
     <div id="app" class="max-w-6xl mx-auto">
         
-        <header class="premium-header text-white p-12 md:p-16 mb-8 shadow-xl relative overflow-hidden text-center">
-            <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+        <header class="premium-header text-white p-16 md:p-24 mb-10 shadow-2xl relative overflow-hidden text-center">
+            <div class="absolute top-0 left-0 w-full h-full opacity-5 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [background-size:32px_32px]"></div>
             
-            <div class="absolute top-6 right-6 z-20">
-                <button id="notif-bell" class="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/10 relative">
-                    <i data-lucide="bell" class="w-5 h-5"></i>
-                    <span id="notif-badge" class="absolute -top-1 -right-1 bg-cyan-400 text-slate-900 text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center hidden border-2 border-[#0f172a]">0</span>
+            <div class="absolute top-8 right-8 z-20">
+                <button id="notif-bell" class="modern-notif p-3.5 rounded-2xl relative">
+                    <i data-lucide="bell" class="w-5 h-5 text-slate-300"></i>
+                    <span id="notif-badge" class="notif-pulse w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black text-white hidden">0</span>
                 </button>
             </div>
 
             <div class="relative z-10">
-                <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-2">D.M. SUIVI</h1>
-                <p class="text-cyan-400 font-bold tracking-[0.2em] uppercase text-[10px] opacity-90">Plateforme de coordination médicale</p>
+                <h1 class="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-0 drop-shadow-2xl">DAVID MEDICAL</h1>
+                <p class="text-slate-400 text-xs font-bold tracking-[0.5em] mt-4 opacity-80">SUIVI DE DÉPLOIEMENT MÉDICAL</p>
             </div>
         </header>
 
-        <div class="glass-nav flex items-center gap-2 mb-8 p-2 rounded-2xl sticky top-4 z-50 shadow-sm">
+        <div class="glass-nav flex items-center gap-2 mb-8 p-3 rounded-3xl sticky top-4 z-50 shadow-xl shadow-slate-200/40">
             <nav id="tabs-container" class="flex items-center gap-1 overflow-x-auto flex-grow px-1">
+                <!-- Onglets dynamiques -->
             </nav>
-            <button id="add-tab-btn" class="flex items-center gap-2 px-5 py-2.5 text-white bg-cyan-600 hover:bg-cyan-500 font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-lg shadow-cyan-900/10">
+            <button id="add-tab-btn" class="btn-modern-add flex items-center gap-2 px-6 py-3.5 text-white font-bold text-[10px] uppercase tracking-widest rounded-2xl active:scale-95">
                 <i data-lucide="plus" class="w-4 h-4"></i>
-                <span class="hidden sm:inline">Nouveau</span>
+                <span class="hidden sm:inline">Nouveau Projet</span>
             </button>
         </div>
 
-        <main id="main-content" class="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm min-h-[500px]">
+        <main id="main-content" class="min-h-[600px]">
         </main>
         
     </div>
 
-    <!-- Modales -->
+    <!-- Modales identiques mais stylisées -->
     <div id="notif-modal">
         <div class="modal-card">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                    <i data-lucide="alert-triangle" class="w-5 h-5 text-cyan-500"></i> Alertes
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-2xl font-black text-slate-900 flex items-center gap-3">
+                    <i data-lucide="bell" class="w-6 h-6 text-red-500"></i> Alertes
                 </h3>
-                <button id="close-notif-btn" class="p-2 hover:bg-slate-100 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
+                <button id="close-notif-btn" class="p-2 hover:bg-slate-100 rounded-xl transition-colors"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
             </div>
-            <div id="notif-list" class="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1"></div>
-            <button id="dismiss-notif-btn" class="w-full mt-6 py-3 bg-slate-900 text-white font-bold rounded-xl text-sm transition-all">Compris</button>
+            <div id="notif-list" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-1"></div>
+            <button id="dismiss-notif-btn" class="w-full mt-8 py-4 bg-slate-900 text-white font-bold rounded-2xl text-sm transition-all hover:bg-slate-800">Fermer</button>
         </div>
     </div>
 
     <div id="late-info-modal">
         <div class="modal-card text-center">
-            <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-4 mx-auto"><i data-lucide="clock" class="w-6 h-6"></i></div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Délai dépassé</h3>
-            <p id="late-info-text" class="text-slate-500 text-xs mb-6"></p>
-            <button onclick="document.getElementById('late-info-modal').style.display='none'" class="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-sm">Fermer</button>
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mb-6 mx-auto"><i data-lucide="alert-octagon" class="w-8 h-8"></i></div>
+            <h3 class="text-2xl font-black text-slate-900 mb-2">Retard Détecté</h3>
+            <p id="late-info-text" class="text-slate-500 text-sm mb-8 leading-relaxed px-4"></p>
+            <button onclick="document.getElementById('late-info-modal').style.display='none'" class="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl text-sm">J'ai compris</button>
         </div>
     </div>
 
     <div id="confirm-modal">
         <div class="modal-card text-center">
-            <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-4 mx-auto"><i data-lucide="trash-2" class="w-6 h-6"></i></div>
-            <h3 class="text-lg font-bold text-slate-900 mb-1">Confirmer ?</h3>
-            <p id="confirm-desc" class="text-slate-500 text-xs mb-6">Cette action est définitive.</p>
-            <div class="flex gap-2">
-                <button id="confirm-delete-btn" class="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl text-sm transition-all active:scale-95">Supprimer</button>
-                <button id="cancel-delete-btn" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm transition-all active:scale-95">Annuler</button>
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mb-6 mx-auto"><i data-lucide="trash-2" class="w-8 h-8"></i></div>
+            <h3 class="text-2xl font-black text-slate-900 mb-2">Supprimer ?</h3>
+            <p id="confirm-desc" class="text-slate-500 text-sm mb-8">Cette action est définitive et supprimera toutes les données liées.</p>
+            <div class="flex gap-4">
+                <button id="confirm-delete-btn" class="flex-1 py-4 bg-red-500 text-white font-bold rounded-2xl text-sm hover:bg-red-600 transition-all">Supprimer</button>
+                <button id="cancel-delete-btn" class="flex-1 py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl text-sm hover:bg-slate-200 transition-all">Annuler</button>
             </div>
         </div>
     </div>
@@ -246,17 +285,17 @@
         
         const STATES = {
             'todo': { label: 'À faire', bg: 'bg-slate-100', text: 'text-slate-500' },
-            'in-progress': { label: 'En cours', bg: 'bg-cyan-100', text: 'text-cyan-700' },
-            'done': { label: 'Terminée', bg: 'bg-emerald-100', text: 'text-emerald-700' }
+            'in-progress': { label: 'En cours', bg: 'bg-red-50', text: 'text-red-600' },
+            'done': { label: 'Terminée', bg: 'bg-emerald-50', text: 'text-emerald-600' }
         };
 
         let tabs = [
             { id: 'dashboard', title: 'Dashboard', isDashboard: true, categories: [] },
             { id: 'tab2', title: 'Clinique Pasteur', isDashboard: false, categories: [
-                { id: 'cat1', title: 'Déploiement Logiciel', tasks: [
-                    { id: 't1', text: 'Configuration des serveurs', status: 'done', date: '2024-03-20' },
-                    { id: 't2', text: 'Formation du personnel', status: 'in-progress', date: '2024-03-28' },
-                    { id: 't3', text: 'Audit de sécurité initial', status: 'todo', date: '2024-01-15' }
+                { id: 'cat1', title: 'Logistique & Matériel', tasks: [
+                    { id: 't1', text: 'Réception des moniteurs', status: 'done', date: '2024-03-20' },
+                    { id: 't2', text: 'Installation câblage salle A1', status: 'in-progress', date: '2024-03-28' },
+                    { id: 't3', text: 'Test connectivité centrale', status: 'todo', date: '2024-01-15' }
                 ]}
             ]}
         ];
@@ -271,7 +310,7 @@
             if (!dateStr) return '---';
             const parts = dateStr.split('-');
             if (parts.length !== 3) return dateStr;
-            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
         
         function render() {
@@ -306,15 +345,15 @@
                 badge.innerText = lateTasks.length;
                 badge.classList.remove('hidden');
                 document.getElementById('notif-list').innerHTML = lateTasks.map(task => `
-                    <div class="p-3 bg-rose-50 border border-rose-100 rounded-xl">
-                        <div class="text-[8px] font-black uppercase text-slate-400 mb-0.5">${task.tabTitle}</div>
-                        <div class="text-xs font-bold text-slate-800">${task.text}</div>
-                        <div class="text-[9px] text-rose-600 font-bold mt-1">Échéance : ${formatDateFR(task.date)}</div>
+                    <div class="p-5 bg-rose-50/50 border border-rose-100 rounded-2xl flex flex-col gap-1">
+                        <div class="text-[9px] font-black uppercase text-rose-400 tracking-widest">${task.tabTitle}</div>
+                        <div class="text-sm font-bold text-slate-800">${task.text}</div>
+                        <div class="text-[10px] text-rose-600 font-bold mt-1">Date dépassée : ${formatDateFR(task.date)}</div>
                     </div>
                 `).join('');
             } else {
                 badge.classList.add('hidden');
-                document.getElementById('notif-list').innerHTML = '<p class="text-center py-6 text-slate-400 text-xs">Aucune alerte</p>';
+                document.getElementById('notif-list').innerHTML = '<div class="text-center py-16"><i data-lucide="shield-check" class="w-12 h-12 text-slate-200 mx-auto mb-4"></i><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Aucune alerte</p></div>';
             }
         }
 
@@ -323,13 +362,12 @@
             tabs.forEach(tab => {
                 const isActive = tab.id === activeTabId;
                 const tabEl = document.createElement('div');
-                tabEl.className = `nav-tab cursor-pointer text-[10px] font-bold uppercase tracking-wider flex items-center ${isActive ? 'active' : 'text-slate-500 hover:text-slate-800'}`;
+                tabEl.className = `nav-tab cursor-pointer text-[10px] font-bold uppercase tracking-widest flex items-center ${isActive ? 'active' : 'text-slate-400 hover:text-slate-600'}`;
                 tabEl.innerHTML = `<span>${tab.title}</span>`;
                 if (!tab.isDashboard) {
                     const del = document.createElement('button');
-                    // Couleur rouge explicite
                     del.className = 'saas-delete-btn ml-2';
-                    del.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
+                    del.innerHTML = '<i data-lucide="x" class="w-3 h-3"></i>';
                     del.onclick = (e) => { 
                         e.stopPropagation(); 
                         pendingDeleteAction = () => deleteTab(tab.id); 
@@ -348,40 +386,54 @@
             if (!activeTab) return;
 
             if (activeTab.isDashboard) {
-                contentArea.innerHTML = `<h2 class="text-2xl font-black text-slate-900 mb-4">Tableau de Bord</h2><p class="text-slate-500 text-sm">Sélectionnez un projet pour commencer.</p>`;
+                contentArea.innerHTML = `
+                    <div class="bg-white p-20 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
+                        <div class="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-8 shadow-inner">
+                            <i data-lucide="layers" class="w-10 h-10 text-slate-200"></i>
+                        </div>
+                        <h2 class="text-4xl font-black text-slate-900 mb-3 tracking-tight">Vue d'ensemble</h2>
+                        <p class="text-slate-400 text-sm max-w-sm font-medium leading-relaxed">Centralisez vos opérations et gérez vos flux de travail médicaux avec précision.</p>
+                    </div>`;
                 return;
             }
 
             contentArea.innerHTML = `
-                <div class="flex flex-col gap-8">
-                    <div class="flex items-center justify-between gap-4">
-                        <input type="text" value="${activeTab.title}" class="font-black text-slate-900 text-3xl outline-none w-full bg-transparent focus:text-cyan-600" onblur="window.updateTabTitle('${activeTab.id}', this.value)">
-                        <button onclick="window.addCategory()" class="shrink-0 px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all">Ajouter Section</button>
+                <div class="flex flex-col gap-12">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4">
+                        <div class="flex flex-col gap-2">
+                             <p class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">PROJET ACTIF</p>
+                             <input type="text" value="${activeTab.title}" class="font-black text-slate-900 text-5xl outline-none w-full bg-transparent focus:text-red-600 transition-colors tracking-tight" onblur="window.updateTabTitle('${activeTab.id}', this.value)">
+                        </div>
+                        <button onclick="window.addCategory()" class="shrink-0 px-10 py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-2xl shadow-slate-200 active:scale-95">Ajouter une section</button>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         ${activeTab.categories.map((cat, idx) => {
                             const sortedTasks = [...cat.tasks].sort((a, b) => {
                                 const aLate = isLate(a.date, a.status);
                                 const bLate = isLate(b.date, b.status);
-                                const aDone = a.status === 'done';
-                                const bDone = b.status === 'done';
-                                if (aDone && !bDone) return 1;
-                                if (!aDone && bDone) return -1;
+                                if (a.status === 'done' && b.status !== 'done') return 1;
+                                if (a.status !== 'done' && b.status === 'done') return -1;
                                 if (aLate && !bLate) return -1;
                                 if (!aLate && bLate) return 1;
-                                if (a.date && b.date) return a.date.localeCompare(b.date);
-                                return 0;
+                                return (a.date || '').localeCompare(b.date || '');
                             });
 
                             return `
-                                <div class="category-card p-6 flex flex-col gap-6 animate-card" style="animation-delay: ${idx * 0.05}s">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <input type="text" value="${cat.title}" class="font-bold text-slate-800 text-lg outline-none w-full bg-transparent" onblur="window.updateCategoryTitle('${cat.id}', this.value)">
+                                <div class="category-card p-10 flex flex-col gap-8 animate-card" style="animation-delay: ${idx * 0.1}s">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center">
+                                                <i data-lucide="layout" class="w-5 h-5"></i>
+                                            </div>
+                                            <input type="text" value="${cat.title}" class="font-black text-slate-800 text-2xl outline-none bg-transparent" onblur="window.updateCategoryTitle('${cat.id}', this.value)">
+                                        </div>
                                         <button onclick="window.confirmDeleteCategory('${cat.id}', '${cat.title.replace(/'/g, "\\'")}')" class="saas-delete-btn">
                                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                                         </button>
                                     </div>
-                                    <div class="flex flex-col gap-3">
+
+                                    <div class="flex flex-col gap-5">
                                         ${sortedTasks.map(task => {
                                             const isDone = task.status === 'done';
                                             const state = STATES[task.status];
@@ -389,8 +441,8 @@
                                             const displayDate = formatDateFR(task.date);
                                             return `
                                                 <div class="task-item flex items-center justify-between gap-4 ${isDone ? 'task-done' : ''}">
-                                                    <div class="flex flex-col gap-1.5 flex-grow">
-                                                        <input type="text" value="${task.text}" class="text-sm font-semibold text-slate-700 outline-none bg-transparent" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
+                                                    <div class="flex flex-col gap-2 flex-grow">
+                                                        <input type="text" value="${task.text}" class="text-sm font-extrabold text-slate-700 outline-none bg-transparent" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
                                                         <div class="flex items-center gap-2">
                                                             <div class="date-container w-fit">
                                                                 <i data-lucide="calendar" class="w-3 h-3"></i>
@@ -398,22 +450,22 @@
                                                                 <input type="date" value="${task.date || ''}" class="absolute inset-0 opacity-0 cursor-pointer" onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
                                                             </div>
                                                             ${taskIsLate ? `
-                                                                <div class="late-badge cursor-pointer" onclick="window.showLateInfo('${task.text.replace(/'/g, "\\'")}', '${displayDate}')">
-                                                                    <i data-lucide="clock" class="w-2 h-2"></i> Retard
+                                                                <div class="flex items-center gap-1.5 px-3 py-1 bg-rose-500 text-white rounded-lg text-[8px] font-black uppercase cursor-pointer animate-pulse" onclick="window.showLateInfo('${task.text.replace(/'/g, "\\'")}', '${displayDate}')">
+                                                                    <i data-lucide="zap" class="w-2.5 h-2.5"></i> Retard
                                                                 </div>
                                                             ` : ''}
                                                         </div>
                                                     </div>
-                                                    <div class="flex items-center gap-3">
+                                                    <div class="flex items-center gap-4">
                                                         <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" class="status-badge ${state.bg} ${state.text}">${state.label}</div>
                                                         <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}', '${task.text.replace(/'/g, "\\'")}')" class="saas-delete-btn">
-                                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                            <i data-lucide="x" class="w-4 h-4"></i>
                                                         </button>
                                                     </div>
                                                 </div>
                                             `;
                                         }).join('')}
-                                        <input type="text" placeholder="+ Ajouter une tâche..." class="w-full bg-transparent px-4 py-3 rounded-xl text-xs font-bold outline-none border border-dashed border-slate-300 focus:border-cyan-400 focus:border-solid transition-all" onkeydown="if(event.key === 'Enter' && this.value.trim()) { window.addTask('${cat.id}', this.value); this.value=''; }">
+                                        <input type="text" placeholder="+ Ajouter une tâche..." class="w-full bg-slate-50/50 px-6 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none border-2 border-dashed border-slate-100 hover:border-red-200 focus:border-red-500 focus:bg-white transition-all text-slate-400 focus:text-slate-900" onkeydown="if(event.key === 'Enter' && this.value.trim()) { window.addTask('${cat.id}', this.value); this.value=''; }">
                                     </div>
                                 </div>
                             `;
@@ -421,15 +473,16 @@
                     </div>
                 </div>
             `;
+            if (window.lucide) window.lucide.createIcons();
         }
 
         window.showLateInfo = (name, formattedDate) => {
-            document.getElementById('late-info-text').innerText = `La tâche "${name}" était prévue pour le ${formattedDate}. Elle est actuellement en retard.`;
+            document.getElementById('late-info-text').innerText = `L'action "${name}" est signalée en retard critique. La date butoir était le ${formattedDate}. Veuillez prioriser cette tâche immédiatement.`;
             document.getElementById('late-info-modal').style.display = 'flex';
         };
 
         window.updateTabTitle = (id, v) => { const t = tabs.find(x => x.id === id); if(t) t.title = v; renderTabs(); };
-        window.addCategory = () => { const activeTab = tabs.find(t => t.id === activeTabId); activeTab.categories.push({ id: 'cat' + Date.now(), title: 'Section', tasks: [] }); render(); };
+        window.addCategory = () => { const activeTab = tabs.find(t => t.id === activeTabId); activeTab.categories.push({ id: 'cat' + Date.now(), title: 'Nouvelle Section', tasks: [] }); render(); };
         window.updateCategoryTitle = (catId, newTitle) => { const activeTab = tabs.find(t => t.id === activeTabId); const cat = activeTab.categories.find(c => c.id === catId); if (cat) cat.title = newTitle; };
         
         window.confirmDeleteCategory = (catId, catTitle) => { 
@@ -437,7 +490,7 @@
                 const activeTab = tabs.find(t => t.id === activeTabId); 
                 activeTab.categories = activeTab.categories.filter(c => c.id !== catId); 
             }; 
-            document.getElementById('confirm-desc').innerText = `Voulez-vous supprimer la section "${catTitle}" et toutes ses tâches ?`;
+            document.getElementById('confirm-desc').innerText = `Voulez-vous supprimer la section "${catTitle}" ?`;
             document.getElementById('confirm-modal').style.display='flex'; 
         };
 
@@ -447,7 +500,7 @@
                 const cat = activeTab.categories.find(c => c.id === catId);
                 if (cat) cat.tasks = cat.tasks.filter(tk => tk.id !== taskId);
             };
-            document.getElementById('confirm-desc').innerText = `Voulez-vous supprimer la tâche "${taskText}" ?`;
+            document.getElementById('confirm-desc').innerText = `Supprimer définitivement "${taskText}" ?`;
             document.getElementById('confirm-modal').style.display='flex';
         };
 
