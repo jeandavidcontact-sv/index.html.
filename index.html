@@ -72,14 +72,62 @@
             color: #ef4444;
         }
 
+        /* Amélioration des cartes de catégories */
         .category-card {
+            background: white;
             border: 1px solid #f1f5f9;
-            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #4f46e5;
+            opacity: 0.1;
         }
 
         .category-card:hover {
             border-color: #e2e8f0;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .category-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Style des tâches personnalisé */
+        .task-item {
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            background: #f8fafc;
+        }
+
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .custom-checkbox.checked {
+            background: #4f46e5;
+            border-color: #4f46e5;
         }
 
         .tab-input:focus {
@@ -134,7 +182,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
-        // Structure de données : chaque onglet contient des catégories, chaque catégorie contient des tâches
         let tabs = [
             { 
                 id: 'dashboard', 
@@ -226,17 +273,16 @@
                 return;
             }
 
-            // Interface Projets (Catégories + Tâches)
             contentArea.innerHTML = `
-                <div class="flex flex-col gap-8">
-                    <div class="flex items-center justify-between">
+                <div class="flex flex-col gap-10">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">${activeTab.title}</h2>
-                        <button onclick="window.addCategory()" class="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-600 transition-colors">
+                        <button onclick="window.addCategory()" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95">
                             <i data-lucide="layout-grid" class="w-4 h-4"></i> Ajouter une catégorie
                         </button>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="categories-grid">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="categories-grid">
                         ${activeTab.categories.map(cat => renderCategory(cat)).join('')}
                     </div>
                 </div>
@@ -245,46 +291,53 @@
 
         function renderCategory(cat) {
             return `
-                <div class="category-card bg-white rounded-[2rem] p-6 flex flex-col gap-4">
-                    <div class="flex items-center justify-between border-b border-slate-50 pb-3">
+                <div class="category-card rounded-[2.5rem] p-7 flex flex-col gap-6">
+                    <div class="flex items-center justify-between gap-2">
                         <input type="text" value="${cat.title}" 
-                            class="font-bold text-slate-800 text-sm outline-none w-full bg-transparent focus:text-indigo-600"
-                            onblur="window.updateCategoryTitle('${cat.id}', this.value)">
-                        <button onclick="window.deleteCategory('${cat.id}')" class="text-slate-300 hover:text-rose-500 p-1">
+                            class="font-extrabold text-slate-800 text-sm outline-none w-full bg-transparent focus:text-indigo-600 placeholder:text-slate-300"
+                            onblur="window.updateCategoryTitle('${cat.id}', this.value)"
+                            placeholder="Titre de catégorie">
+                        <button onclick="window.deleteCategory('${cat.id}')" class="text-slate-300 hover:text-rose-500 p-2 transition-colors rounded-xl hover:bg-rose-50">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
                     
-                    <div class="flex flex-col gap-2">
+                    <div class="flex flex-col gap-1">
                         ${cat.tasks.map(task => `
-                            <div class="flex items-center gap-3 group">
-                                <input type="checkbox" ${task.completed ? 'checked' : ''} 
-                                    class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                    onchange="window.toggleTask('${cat.id}', '${task.id}')">
+                            <div class="task-item flex items-center gap-3 p-2 group">
+                                <div class="custom-checkbox ${task.completed ? 'checked' : ''}" 
+                                     onclick="window.toggleTask('${cat.id}', '${task.id}')">
+                                    ${task.completed ? '<i data-lucide="check" class="w-3 h-3 text-white"></i>' : ''}
+                                </div>
                                 <input type="text" value="${task.text}" 
-                                    class="text-xs text-slate-600 outline-none flex-grow bg-transparent ${task.completed ? 'line-through opacity-40' : ''}"
+                                    class="text-[13px] font-medium text-slate-600 outline-none flex-grow bg-transparent transition-all ${task.completed ? 'line-through opacity-40 italic' : ''}"
                                     onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
-                                <button onclick="window.deleteTask('${cat.id}', '${task.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-opacity">
-                                    <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
+                                <button onclick="window.deleteTask('${cat.id}', '${task.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 p-1 transition-all">
+                                    <i data-lucide="x-circle" class="w-4 h-4"></i>
                                 </button>
                             </div>
                         `).join('')}
+                        
+                        ${cat.tasks.length === 0 ? '<p class="text-[11px] text-slate-400 italic px-2 py-4">Aucune tâche pour le moment.</p>' : ''}
                     </div>
                     
-                    <button onclick="window.addTask('${cat.id}')" class="mt-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-700 transition-colors">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Ajouter une tâche
+                    <button onclick="window.addTask('${cat.id}')" class="group mt-auto flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.1em] text-slate-400 hover:text-indigo-600 transition-all">
+                        <div class="w-6 h-6 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        </div>
+                        Ajouter une tâche
                     </button>
                 </div>
             `;
         }
 
-        // --- FONCTIONS GLOBALES POUR ACTIONS UI ---
+        // --- FONCTIONS GLOBALES ---
         
         window.addCategory = () => {
             const activeTab = tabs.find(t => t.id === activeTabId);
             activeTab.categories.push({
                 id: 'cat' + Date.now(),
-                title: 'Nouvelle Catégorie',
+                title: '',
                 tasks: []
             });
             render();
@@ -307,7 +360,7 @@
             const cat = activeTab.categories.find(c => c.id === catId);
             cat.tasks.push({
                 id: 'task' + Date.now(),
-                text: 'Nouvelle tâche',
+                text: '',
                 completed: false
             });
             render();
@@ -334,8 +387,6 @@
             cat.tasks = cat.tasks.filter(t => t.id !== taskId);
             render();
         };
-
-        // --- INITIALISATION ---
 
         function deleteTab(id) {
             tabs = tabs.filter(t => t.id !== id);
