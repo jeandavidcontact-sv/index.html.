@@ -44,16 +44,42 @@
             color: #334155;
         }
 
-        .edit-icon, .delete-btn {
+        .tab-action-btn {
             opacity: 0;
-            transform: scale(0.9);
+            transform: scale(0.8);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-tab:hover .tab-action-btn {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .delete-btn-premium {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: transparent;
+            color: #94a3b8;
             transition: all 0.2s ease;
         }
 
-        .nav-tab:hover .edit-icon, 
-        .nav-tab:hover .delete-btn {
-            opacity: 1;
-            transform: scale(1);
+        .delete-btn-premium:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .category-card {
+            border: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+
+        .category-card:hover {
+            border-color: #e2e8f0;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
         }
 
         .tab-input:focus {
@@ -61,16 +87,10 @@
             background: #f8fafc;
             padding: 2px 6px;
             border-radius: 6px;
-            box-shadow: inset 0 0 0 1px #e2e8f0;
         }
 
-        #tabs-container::-webkit-scrollbar {
-            display: none;
-        }
-        #tabs-container {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        #tabs-container::-webkit-scrollbar { display: none; }
+        #tabs-container { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-4 md:p-10">
@@ -79,12 +99,9 @@
         
         <header class="premium-header text-white p-14 md:p-20 mb-10 shadow-2xl relative overflow-hidden flex items-center justify-center">
             <div class="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full transform scale-150 translate-y-1/2"></div>
-            
             <div class="relative z-10 text-center">
-                <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter uppercase mb-2">
-                    DAVID MÉDICAL
-                </h1>
-                <p class="text-indigo-300 font-medium tracking-widest uppercase text-sm opacity-80">Plateforme de Suivi Expert</p>
+                <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter uppercase mb-2">DAVID MÉDICAL</h1>
+                <p class="text-indigo-300 font-medium tracking-widest uppercase text-sm opacity-80">Gestion de Projets & Tâches</p>
             </div>
         </header>
 
@@ -92,14 +109,13 @@
             <nav id="tabs-container" class="flex items-center gap-2 overflow-x-auto flex-grow px-2">
                 <!-- Onglets injectés ici -->
             </nav>
-            
-            <button id="add-tab-btn" class="flex items-center gap-2 px-5 py-2.5 text-white bg-indigo-600 hover:bg-indigo-700 font-semibold text-xs uppercase tracking-widest rounded-2xl transition-all shadow-md shadow-indigo-200 active:scale-95">
+            <button id="add-tab-btn" class="flex items-center gap-2 px-5 py-2.5 text-white bg-indigo-600 hover:bg-indigo-700 font-semibold text-xs uppercase tracking-widest rounded-2xl transition-all shadow-md active:scale-95">
                 <i data-lucide="plus" class="w-4 h-4"></i>
-                <span class="hidden sm:inline">Nouveau</span>
+                <span class="hidden sm:inline">Nouveau Projet</span>
             </button>
         </div>
 
-        <main id="main-content" class="bg-white p-10 md:p-14 rounded-[3rem] shadow-sm border border-slate-100 min-h-[500px] transition-all duration-500">
+        <main id="main-content" class="bg-white p-8 md:p-12 rounded-[3rem] shadow-sm border border-slate-100 min-h-[500px]">
             <!-- Contenu dynamique -->
         </main>
         
@@ -112,22 +128,37 @@
         const firebaseConfig = {
             apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
             authDomain: "capdavid-5cb65.firebaseapp.com",
-            databaseURL: "https://capdavid-5cb65-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "capdavid-5cb65",
-            storageBucket: "capdavid-5cb65.firebasestorage.app",
-            messagingSenderId: "346917679110",
-            appId: "1:346917679110:web:2b76ad31621eec618ed387",
-            measurementId: "G-GHTM9M5WCD"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
-        // Liste initiale des onglets
+        // Structure de données : chaque onglet contient des catégories, chaque catégorie contient des tâches
         let tabs = [
-            { id: 'dashboard', title: 'Tableau de bord', content: 'Bienvenue sur votre espace de pilotage centralisé David Médical.' },
-            { id: 'tab2', title: 'Projets Clients', content: 'Consultez ici l\'avancement détaillé de chaque mission médicale.' }
+            { 
+                id: 'dashboard', 
+                title: 'Tableau de bord', 
+                isDashboard: true,
+                categories: [] 
+            },
+            { 
+                id: 'tab2', 
+                title: 'Projets Clients', 
+                isDashboard: false,
+                categories: [
+                    {
+                        id: 'cat1',
+                        title: 'Phase Initiale',
+                        tasks: [
+                            { id: 't1', text: 'Analyse des besoins', completed: false },
+                            { id: 't2', text: 'Validation devis', completed: true }
+                        ]
+                    }
+                ] 
+            }
         ];
+        
         let activeTabId = 'dashboard';
 
         const container = document.getElementById('tabs-container');
@@ -135,132 +166,193 @@
         const addBtn = document.getElementById('add-tab-btn');
 
         function render() {
+            renderTabs();
+            renderContent();
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        function renderTabs() {
             container.innerHTML = '';
             tabs.forEach(tab => {
                 const isActive = tab.id === activeTabId;
-                const isDashboard = tab.id === 'dashboard';
-
                 const tabEl = document.createElement('div');
-                tabEl.className = `nav-tab flex items-center gap-3 px-5 py-3 rounded-2xl cursor-pointer font-semibold text-xs uppercase tracking-widest ${isActive ? 'active' : 'text-slate-500'}`;
+                tabEl.className = `nav-tab flex items-center gap-2 px-4 py-2.5 rounded-2xl cursor-pointer font-semibold text-[11px] uppercase tracking-widest ${isActive ? 'active' : 'text-slate-500'}`;
                 
                 const label = document.createElement('span');
                 label.className = 'tab-input outline-none whitespace-nowrap';
-                label.contentEditable = isActive && !isDashboard; 
+                label.contentEditable = isActive && !tab.isDashboard; 
                 label.innerText = tab.title;
                 
-                label.onclick = (e) => { 
-                    if(isActive) e.stopPropagation(); 
-                };
-                
                 label.onblur = () => {
-                    if(!isDashboard) {
+                    if(!tab.isDashboard) {
                         tab.title = label.innerText.trim() || "Sans titre";
                         render();
                     }
                 };
 
-                label.onkeydown = (e) => {
-                    if(e.key === 'Enter') { 
-                        e.preventDefault(); 
-                        label.blur(); 
-                    }
-                };
-
+                label.onkeydown = (e) => { if(e.key === 'Enter') { e.preventDefault(); label.blur(); } };
                 tabEl.appendChild(label);
 
-                // Icône crayon pour l'onglet actif (sauf dashboard)
-                if(isActive && !isDashboard) {
-                    const pen = document.createElement('i');
-                    pen.setAttribute('data-lucide', 'pencil-line');
-                    pen.className = 'w-3 h-3 text-indigo-400 edit-icon opacity-40 hover:opacity-100';
-                    tabEl.appendChild(pen);
-                }
-
-                // Bouton de suppression (croix) - Invisible pour le dashboard
-                if (!isDashboard) {
+                if (!tab.isDashboard) {
                     const del = document.createElement('button');
-                    del.className = 'delete-btn text-slate-300 hover:text-rose-500 ml-1 flex items-center transition-all duration-200';
-                    del.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
-                    del.onclick = (e) => {
-                        e.stopPropagation();
-                        deleteTab(tab.id);
-                    };
+                    del.className = 'delete-btn-premium tab-action-btn ml-1';
+                    del.innerHTML = '<i data-lucide="x" class="w-3.5 h-3.5"></i>';
+                    del.onclick = (e) => { e.stopPropagation(); deleteTab(tab.id); };
                     tabEl.appendChild(del);
                 }
 
-                tabEl.onclick = () => {
-                    activeTabId = tab.id;
-                    render();
-                };
-
+                tabEl.onclick = () => { activeTabId = tab.id; render(); };
                 container.appendChild(tabEl);
             });
-
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            if (activeTab) {
-                contentArea.style.opacity = '0';
-                contentArea.style.transform = 'translateY(10px)';
-                
-                setTimeout(() => {
-                    contentArea.innerHTML = `
-                        <div class="max-w-4xl">
-                            <h2 class="text-4xl font-extrabold text-slate-900 mb-8 tracking-tight">${activeTab.title}</h2>
-                            <div class="text-slate-600 leading-relaxed text-lg">${activeTab.content}</div>
-                        </div>
-                    `;
-                    contentArea.style.opacity = '1';
-                    contentArea.style.transform = 'translateY(0)';
-                }, 150);
-            }
-
-            if (window.lucide) window.lucide.createIcons();
         }
 
-        function deleteTab(id) {
-            // Sécurité : on ne peut pas supprimer le tableau de bord
-            if (id === 'dashboard') return;
+        function renderContent() {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            if (!activeTab) return;
 
-            tabs = tabs.filter(t => t.id !== id);
-            
-            // Si on supprime l'onglet actif, on redirige vers le tableau de bord
-            if (activeTabId === id) {
-                activeTabId = 'dashboard';
+            if (activeTab.isDashboard) {
+                contentArea.innerHTML = `
+                    <div class="max-w-4xl">
+                        <h2 class="text-4xl font-extrabold text-slate-900 mb-6">Tableau de bord</h2>
+                        <p class="text-slate-500 text-lg">Bienvenue dans votre interface de gestion centralisée.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+                            <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                                <div class="text-indigo-600 font-bold text-3xl mb-1">${tabs.length - 1}</div>
+                                <div class="text-slate-500 uppercase text-[10px] tracking-widest font-bold">Projets Actifs</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
             }
+
+            // Interface Projets (Catégories + Tâches)
+            contentArea.innerHTML = `
+                <div class="flex flex-col gap-8">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">${activeTab.title}</h2>
+                        <button onclick="window.addCategory()" class="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-600 transition-colors">
+                            <i data-lucide="layout-grid" class="w-4 h-4"></i> Ajouter une catégorie
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="categories-grid">
+                        ${activeTab.categories.map(cat => renderCategory(cat)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCategory(cat) {
+            return `
+                <div class="category-card bg-white rounded-[2rem] p-6 flex flex-col gap-4">
+                    <div class="flex items-center justify-between border-b border-slate-50 pb-3">
+                        <input type="text" value="${cat.title}" 
+                            class="font-bold text-slate-800 text-sm outline-none w-full bg-transparent focus:text-indigo-600"
+                            onblur="window.updateCategoryTitle('${cat.id}', this.value)">
+                        <button onclick="window.deleteCategory('${cat.id}')" class="text-slate-300 hover:text-rose-500 p-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        ${cat.tasks.map(task => `
+                            <div class="flex items-center gap-3 group">
+                                <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                                    class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    onchange="window.toggleTask('${cat.id}', '${task.id}')">
+                                <input type="text" value="${task.text}" 
+                                    class="text-xs text-slate-600 outline-none flex-grow bg-transparent ${task.completed ? 'line-through opacity-40' : ''}"
+                                    onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
+                                <button onclick="window.deleteTask('${cat.id}', '${task.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-opacity">
+                                    <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <button onclick="window.addTask('${cat.id}')" class="mt-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-700 transition-colors">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Ajouter une tâche
+                    </button>
+                </div>
+            `;
+        }
+
+        // --- FONCTIONS GLOBALES POUR ACTIONS UI ---
+        
+        window.addCategory = () => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            activeTab.categories.push({
+                id: 'cat' + Date.now(),
+                title: 'Nouvelle Catégorie',
+                tasks: []
+            });
+            render();
+        };
+
+        window.updateCategoryTitle = (catId, newTitle) => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            const cat = activeTab.categories.find(c => c.id === catId);
+            if (cat) cat.title = newTitle;
+        };
+
+        window.deleteCategory = (catId) => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            activeTab.categories = activeTab.categories.filter(c => c.id !== catId);
+            render();
+        };
+
+        window.addTask = (catId) => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            const cat = activeTab.categories.find(c => c.id === catId);
+            cat.tasks.push({
+                id: 'task' + Date.now(),
+                text: 'Nouvelle tâche',
+                completed: false
+            });
+            render();
+        };
+
+        window.toggleTask = (catId, taskId) => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            const cat = activeTab.categories.find(c => c.id === catId);
+            const task = cat.tasks.find(t => t.id === taskId);
+            task.completed = !task.completed;
+            render();
+        };
+
+        window.updateTaskText = (catId, taskId, newText) => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            const cat = activeTab.categories.find(c => c.id === catId);
+            const task = cat.tasks.find(t => t.id === taskId);
+            task.text = newText;
+        };
+
+        window.deleteTask = (catId, taskId) => {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            const cat = activeTab.categories.find(c => c.id === catId);
+            cat.tasks = cat.tasks.filter(t => t.id !== taskId);
+            render();
+        };
+
+        // --- INITIALISATION ---
+
+        function deleteTab(id) {
+            tabs = tabs.filter(t => t.id !== id);
+            if (activeTabId === id) activeTabId = 'dashboard';
             render();
         }
 
         addBtn.onclick = () => {
             const newId = 'tab' + Date.now();
-            tabs.push({
-                id: newId,
-                title: 'Nouveau Dossier',
-                content: 'Saisissez ici les détails de votre nouvelle section de suivi.'
-            });
+            tabs.push({ id: newId, title: 'Nouveau Projet', isDashboard: false, categories: [] });
             activeTabId = newId;
             render();
-            
-            setTimeout(() => {
-                const lastTab = container.lastElementChild;
-                if (lastTab) {
-                    const label = lastTab.querySelector('.tab-input');
-                    if (label) {
-                        label.focus();
-                        document.execCommand('selectAll', false, null);
-                    }
-                }
-            }, 100);
-        };
-
-        async function initAuth() {
-            try {
-                await signInAnonymously(auth);
-                render();
-            } catch (error) {
-                console.error("Auth error:", error);
-                render(); 
-            }
         }
 
+        async function initAuth() {
+            try { await signInAnonymously(auth); render(); } catch (e) { render(); }
+        }
         initAuth();
     </script>
 </body>
