@@ -7,150 +7,112 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             margin: 0;
             padding: 0;
-            color: #1e293b;
-            background-color: #f8fafc;
+            color: #334155;
+            background-color: #f8fafc; /* Fond global très clair */
         }
 
         .premium-header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            border-radius: 2.5rem;
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            border-radius: 2rem;
         }
 
         .glass-nav {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .nav-tab {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             position: relative;
-            padding: 0.85rem 1.5rem;
-            min-height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1rem;
         }
 
         .nav-tab.active {
-            background-color: white;
-            color: #4f46e5;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        }
-
-        .nav-tab:not(.active):hover {
-            background-color: rgba(241, 245, 249, 0.8);
-            color: #334155;
+            background-color: #0f172a;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
         }
 
         .saas-delete-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #cbd5e1;
+            color: #94a3b8;
             transition: all 0.2s ease;
             cursor: pointer;
-            border-radius: 0.75rem;
         }
 
         .saas-delete-btn:hover {
             color: #ef4444;
-            background: #fef2f2;
-            transform: scale(1.1);
         }
 
+        /* --- Palette "Innovation Médicale" --- */
         .category-card {
-            background: white;
-            border-radius: 2.5rem;
-            border: 1px solid #eef2f6;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            border-left: 6px solid #4f46e5;
+            background: #f1f5f9; /* Fond gris bleuté doux pour la section */
+            border-radius: 2rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+            border-top: 4px solid #06b6d4; /* Accent Cyan */
         }
 
         .category-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.08);
-            border-color: #e2e8f0;
+            border-color: #06b6d4;
+            transform: translateY(-2px);
         }
 
         .task-item {
-            border-radius: 1.5rem;
+            border-radius: 1.25rem;
             padding: 1rem 1.25rem;
-            transition: all 0.3s ease;
-            background: #fcfdfe;
-            border: 1px solid #f1f5f9;
+            background: #ffffff; /* Blanc pur pour ressortir */
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
         }
 
         .task-item:hover {
-            background: white;
-            border-color: #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            border-color: #06b6d4;
+            transform: scale(1.01);
         }
 
         .task-done {
-            opacity: 0.5;
+            opacity: 0.6;
             background-color: #f8fafc;
-            border-color: transparent;
+            border-color: #f1f5f9;
+            box-shadow: none;
         }
 
         .status-badge {
             cursor: pointer;
-            transition: all 0.2s ease;
-            user-select: none;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
-            padding: 0.5rem 1rem;
-            border-radius: 1rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-        }
-
-        .status-badge:active {
-            transform: scale(0.95);
-        }
-
-        .editable-text:focus {
-            outline: none;
-            background: rgba(79, 70, 229, 0.05);
-            border-radius: 4px;
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
         }
 
         .date-container {
             position: relative;
             display: flex;
             align-items: center;
-            gap: 0.375rem;
-            background: #f1f5f9;
-            padding: 0.4rem 0.8rem;
-            border-radius: 12px;
+            gap: 0.4rem;
+            background: #f8fafc;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
             border: 1px solid #e2e8f0;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .date-container:hover {
-            border-color: #4f46e5;
-            background: #ffffff;
-            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1);
-        }
-
-        .date-input-hidden {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
         }
 
         #confirm-modal, #notif-modal {
@@ -158,7 +120,7 @@
             position: fixed;
             inset: 0;
             background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -166,131 +128,78 @@
 
         .modal-card {
             background: white;
-            padding: 2.5rem;
-            border-radius: 2.5rem;
+            padding: 2rem;
+            border-radius: 2rem;
             width: 90%;
-            max-width: 450px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-            max-height: 85vh;
-            display: flex;
-            flex-direction: column;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
-        #tabs-container::-webkit-scrollbar { display: none; }
-        #tabs-container { -ms-overflow-style: none; scrollbar-width: none; }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
         }
         .animate-card {
-            animation: slideIn 0.5s ease forwards;
-        }
-
-        @keyframes pulse-red {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .late-badge {
-            animation: pulse-red 2s infinite ease-in-out;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            animation: fadeIn 0.4s ease-out forwards;
         }
     </style>
 </head>
-<body class="p-4 md:p-10">
+<body class="p-4 md:p-8">
 
-    <div id="app" class="max-w-7xl mx-auto">
+    <div id="app" class="max-w-6xl mx-auto">
         
-        <header class="premium-header text-white p-14 md:p-20 mb-10 shadow-2xl relative overflow-hidden flex items-center justify-center">
-            <div class="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full transform scale-150 translate-y-1/2"></div>
+        <header class="premium-header text-white p-12 md:p-16 mb-8 shadow-xl relative overflow-hidden text-center">
+            <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
             
-            <!-- Notification Bell Icon -->
-            <div class="absolute top-8 right-8 z-20">
-                <button id="notif-bell" class="p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-95 border border-white/10 relative">
-                    <i data-lucide="bell" class="w-6 h-6"></i>
-                    <span id="notif-badge" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center hidden border-2 border-[#0f172a]">0</span>
+            <div class="absolute top-6 right-6 z-20">
+                <button id="notif-bell" class="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/10 relative">
+                    <i data-lucide="bell" class="w-5 h-5"></i>
+                    <span id="notif-badge" class="absolute -top-1 -right-1 bg-cyan-400 text-slate-900 text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center hidden border-2 border-[#0f172a]">0</span>
                 </button>
             </div>
 
-            <div class="relative z-10 text-center">
-                <h1 class="text-6xl md:text-8xl font-extrabold tracking-tighter uppercase mb-2">DAVID MÉDICAL</h1>
-                <p class="text-indigo-300 font-medium tracking-widest uppercase text-sm opacity-80">Gestion de Projets & Tâches</p>
+            <div class="relative z-10">
+                <h1 class="text-4xl md:text-6xl font-black tracking-tight mb-2">D.M. SUIVI</h1>
+                <p class="text-cyan-400 font-bold tracking-[0.2em] uppercase text-[10px] opacity-90">Plateforme de coordination médicale</p>
             </div>
         </header>
 
-        <div class="glass-nav flex items-center gap-3 mb-10 p-2.5 rounded-3xl shadow-sm sticky top-6 z-50">
-            <nav id="tabs-container" class="flex items-center gap-2 overflow-x-auto flex-grow px-2">
-                <!-- Onglets injectés ici -->
+        <div class="glass-nav flex items-center gap-2 mb-8 p-2 rounded-2xl sticky top-4 z-50 shadow-sm">
+            <nav id="tabs-container" class="flex items-center gap-1 overflow-x-auto flex-grow px-1">
             </nav>
-            <button id="add-tab-btn" class="flex items-center gap-2 px-6 py-3 text-white bg-indigo-600 hover:bg-indigo-700 font-semibold text-xs uppercase tracking-widest rounded-2xl transition-all shadow-md active:scale-95 ml-2">
+            <button id="add-tab-btn" class="flex items-center gap-2 px-5 py-2.5 text-white bg-cyan-600 hover:bg-cyan-500 font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-lg shadow-cyan-900/10">
                 <i data-lucide="plus" class="w-4 h-4"></i>
-                <span class="hidden sm:inline">Nouveau Projet</span>
+                <span class="hidden sm:inline">Nouveau</span>
             </button>
         </div>
 
-        <main id="main-content" class="bg-white p-8 md:p-12 rounded-[3.5rem] shadow-sm border border-slate-100 min-h-[500px]">
-            <!-- Contenu dynamique -->
+        <main id="main-content" class="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-200 shadow-sm min-h-[500px]">
         </main>
         
     </div>
 
-    <!-- Modal Notifications -->
-    <div id="notif-modal" class="p-4">
+    <!-- Modals -->
+    <div id="notif-modal">
         <div class="modal-card">
             <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-3">
-                    <div class="p-3 bg-rose-50 text-rose-500 rounded-2xl">
-                        <i data-lucide="alert-circle" class="w-6 h-6"></i>
-                    </div>
-                    <h3 class="text-xl font-extrabold text-slate-900">Tâches en retard</h3>
-                </div>
-                <button id="close-notif-btn" class="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                    <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
-                </button>
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-cyan-500"></i> Alertes
+                </h3>
+                <button id="close-notif-btn" class="p-2 hover:bg-slate-100 rounded-lg"><i data-lucide="x" class="w-5 h-5 text-slate-400"></i></button>
             </div>
-            
-            <div id="notif-list" class="flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-2 flex-grow">
-                <!-- Injected by JS -->
-            </div>
-
-            <div class="mt-8 pt-6 border-t border-slate-100">
-                <button id="dismiss-notif-btn" class="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-2xl transition-all active:scale-95">
-                    Fermer l'aperçu
-                </button>
-            </div>
+            <div id="notif-list" class="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1"></div>
+            <button id="dismiss-notif-btn" class="w-full mt-6 py-3 bg-slate-900 text-white font-bold rounded-xl text-sm transition-all">Compris</button>
         </div>
     </div>
 
-    <!-- Modal Confirmation Suppression -->
     <div id="confirm-modal">
-        <div class="modal-card">
-            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                <i data-lucide="trash-2" class="w-8 h-8"></i>
-            </div>
-            <h3 class="text-xl font-extrabold text-slate-900 text-center mb-2">Supprimer cet élément ?</h3>
-            <p class="text-slate-500 text-center text-sm mb-8">Cette action effacera définitivement les données sélectionnées.</p>
-            <div class="flex flex-col gap-3">
-                <button id="confirm-delete-btn" class="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-rose-100 active:scale-95">
-                    Confirmer la suppression
-                </button>
-                <button id="cancel-delete-btn" class="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-2xl transition-all active:scale-95">
-                    Annuler
-                </button>
+        <div class="modal-card text-center">
+            <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-4 mx-auto"><i data-lucide="trash-2" class="w-6 h-6"></i></div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Confirmer ?</h3>
+            <p class="text-slate-500 text-xs mb-6">Cette action est définitive.</p>
+            <div class="flex gap-2">
+                <button id="confirm-delete-btn" class="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl text-sm">Supprimer</button>
+                <button id="cancel-delete-btn" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm">Annuler</button>
             </div>
         </div>
     </div>
@@ -299,40 +208,24 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
-            authDomain: "capdavid-5cb65.firebaseapp.com",
-            projectId: "capdavid-5cb65",
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ", authDomain: "capdavid-5cb65.firebaseapp.com", projectId: "capdavid-5cb65" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
         const STATES = {
-            'todo': { label: 'À faire', bg: 'bg-slate-100', text: 'text-slate-600' },
-            'in-progress': { label: 'En cours', bg: 'bg-indigo-100', text: 'text-indigo-700' },
+            'todo': { label: 'À faire', bg: 'bg-slate-100', text: 'text-slate-500' },
+            'in-progress': { label: 'En cours', bg: 'bg-cyan-100', text: 'text-cyan-700' },
             'done': { label: 'Terminée', bg: 'bg-emerald-100', text: 'text-emerald-700' }
         };
 
-        const LATE_STATUS_STYLE = { bg: 'bg-rose-100', text: 'text-rose-700' };
-
         let tabs = [
-            { id: 'dashboard', title: 'Tableau de bord', isDashboard: true, categories: [] },
-            { 
-                id: 'tab2', 
-                title: 'Projets Clients', 
-                isDashboard: false,
-                categories: [
-                    {
-                        id: 'cat1',
-                        title: 'Installation Locale',
-                        tasks: [
-                            { id: 't1', text: 'Recherche de bureaux', status: 'done', date: '2024-03-20' },
-                            { id: 't2', text: 'Aménagement intérieur', status: 'in-progress', date: '2024-03-25' }
-                        ]
-                    }
-                ] 
-            }
+            { id: 'dashboard', title: 'Dashboard', isDashboard: true, categories: [] },
+            { id: 'tab2', title: 'Clinique Pasteur', isDashboard: false, categories: [
+                { id: 'cat1', title: 'Déploiement Logiciel', tasks: [
+                    { id: 't1', text: 'Configuration des serveurs', status: 'done', date: '2024-03-20' },
+                    { id: 't2', text: 'Formation du personnel', status: 'in-progress', date: '2024-03-28' }
+                ]}
+            ]}
         ];
         
         let activeTabId = 'dashboard';
@@ -340,18 +233,7 @@
 
         const container = document.getElementById('tabs-container');
         const contentArea = document.getElementById('main-content');
-        const addBtn = document.getElementById('add-tab-btn');
-        const confirmModal = document.getElementById('confirm-modal');
-        const confirmBtn = document.getElementById('confirm-delete-btn');
-        const cancelBtn = document.getElementById('cancel-delete-btn');
         
-        const notifModal = document.getElementById('notif-modal');
-        const bellBtn = document.getElementById('notif-bell');
-        const notifBadge = document.getElementById('notif-badge');
-        const notifList = document.getElementById('notif-list');
-        const closeNotifBtn = document.getElementById('close-notif-btn');
-        const dismissNotifBtn = document.getElementById('dismiss-notif-btn');
-
         function render() {
             renderTabs();
             renderContent();
@@ -359,136 +241,51 @@
             if (window.lucide) window.lucide.createIcons();
         }
 
-        // --- Notification Logic ---
         function updateNotifications() {
             const today = new Date().toISOString().split('T')[0];
             const lateTasks = [];
-
             tabs.forEach(tab => {
                 if (tab.isDashboard) return;
                 tab.categories.forEach(cat => {
                     cat.tasks.forEach(task => {
                         if (task.status !== 'done' && task.date && task.date < today) {
-                            lateTasks.push({ ...task, tabId: tab.id, tabTitle: tab.title });
+                            lateTasks.push({ ...task, tabTitle: tab.title });
                         }
                     });
                 });
             });
 
+            const badge = document.getElementById('notif-badge');
             if (lateTasks.length > 0) {
-                notifBadge.innerText = lateTasks.length;
-                notifBadge.classList.remove('hidden');
-                
-                notifList.innerHTML = lateTasks.map(task => `
-                    <div onclick="window.goToTask('${task.tabId}')" class="p-4 bg-slate-50 hover:bg-rose-50 border border-slate-100 hover:border-rose-100 rounded-2xl cursor-pointer transition-all group">
-                        <div class="flex flex-col">
-                            <span class="text-[9px] font-black uppercase text-indigo-400 tracking-widest mb-1">${task.tabTitle}</span>
-                            <span class="text-sm font-bold text-slate-800 leading-tight">${task.text}</span>
-                            <div class="flex items-center gap-2 mt-2">
-                                <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">
-                                    En retard (${task.date.split('-').reverse().join('/')})
-                                </span>
-                            </div>
-                        </div>
+                badge.innerText = lateTasks.length;
+                badge.classList.remove('hidden');
+                document.getElementById('notif-list').innerHTML = lateTasks.map(task => `
+                    <div class="p-3 bg-rose-50 border border-rose-100 rounded-xl">
+                        <div class="text-[8px] font-black uppercase text-slate-400 mb-0.5">${task.tabTitle}</div>
+                        <div class="text-xs font-bold text-slate-800">${task.text}</div>
                     </div>
                 `).join('');
             } else {
-                notifBadge.classList.add('hidden');
-                notifList.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-12 text-center">
-                        <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mb-4">
-                            <i data-lucide="check-circle" class="w-8 h-8"></i>
-                        </div>
-                        <p class="text-sm font-bold text-slate-400">Tout est à jour !<br><span class="text-xs font-normal">Aucune tâche en retard.</span></p>
-                    </div>`;
+                badge.classList.add('hidden');
+                document.getElementById('notif-list').innerHTML = '<p class="text-center py-6 text-slate-400 text-xs">Aucune alerte</p>';
             }
         }
-
-        window.goToTask = (tabId) => {
-            activeTabId = tabId;
-            notifModal.style.display = 'none';
-            render();
-        };
-
-        bellBtn.onclick = () => {
-            notifModal.style.display = 'flex';
-            if (window.lucide) window.lucide.createIcons();
-        };
-
-        closeNotifBtn.onclick = dismissNotifBtn.onclick = () => {
-            notifModal.style.display = 'none';
-        };
-
-        // Close on backdrop click
-        window.onclick = (e) => {
-            if (e.target === notifModal) notifModal.style.display = 'none';
-            if (e.target === confirmModal) confirmModal.style.display = 'none';
-        };
-
-        function requestConfirmation(action) {
-            pendingDeleteAction = action;
-            confirmModal.style.display = 'flex';
-        }
-
-        confirmBtn.onclick = () => {
-            if (pendingDeleteAction) {
-                pendingDeleteAction();
-                pendingDeleteAction = null;
-            }
-            confirmModal.style.display = 'none';
-        };
-
-        cancelBtn.onclick = () => {
-            pendingDeleteAction = null;
-            confirmModal.style.display = 'none';
-        };
 
         function renderTabs() {
             container.innerHTML = '';
             tabs.forEach(tab => {
                 const isActive = tab.id === activeTabId;
                 const tabEl = document.createElement('div');
-                tabEl.className = `nav-tab rounded-2xl cursor-pointer font-semibold text-[11px] uppercase tracking-widest ${isActive ? 'active' : 'text-slate-500'}`;
-                
-                const label = document.createElement('span');
-                label.className = 'editable-text outline-none whitespace-nowrap px-1';
-                label.contentEditable = "false";
-                label.innerText = tab.title;
-                
-                tabEl.onclick = (e) => {
-                    if (label.contentEditable === "true") return;
-                    activeTabId = tab.id;
-                    render();
-                };
-
-                tabEl.ondblclick = (e) => {
-                    if (tab.isDashboard) return;
-                    e.stopPropagation();
-                    label.contentEditable = "true";
-                    label.focus();
-                };
-
-                label.onblur = () => {
-                    const newTitle = label.innerText.trim();
-                    if(!tab.isDashboard && newTitle) tab.title = newTitle;
-                    label.contentEditable = "false";
-                };
-
-                label.onkeydown = (e) => { if(e.key === 'Enter') { e.preventDefault(); label.blur(); } };
-                
-                tabEl.appendChild(label);
-
+                tabEl.className = `nav-tab cursor-pointer text-[10px] font-bold uppercase tracking-wider ${isActive ? 'active' : 'text-slate-500 hover:text-slate-800'}`;
+                tabEl.innerHTML = `<span>${tab.title}</span>`;
                 if (!tab.isDashboard) {
                     const del = document.createElement('button');
-                    del.className = 'saas-delete-btn ml-3 p-1';
-                    del.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
-                    del.onclick = (e) => { 
-                        e.stopPropagation(); 
-                        requestConfirmation(() => deleteTab(tab.id));
-                    };
+                    del.className = 'saas-delete-btn ml-2';
+                    del.innerHTML = '<i data-lucide="x" class="w-3 h-3"></i>';
+                    del.onclick = (e) => { e.stopPropagation(); pendingDeleteAction = () => deleteTab(tab.id); document.getElementById('confirm-modal').style.display='flex'; };
                     tabEl.appendChild(del);
                 }
-
+                tabEl.onclick = () => { activeTabId = tab.id; render(); };
                 container.appendChild(tabEl);
             });
         }
@@ -498,167 +295,68 @@
             if (!activeTab) return;
 
             if (activeTab.isDashboard) {
-                contentArea.innerHTML = `<div class="max-w-4xl"><h2 class="text-4xl font-extrabold text-slate-900 mb-6">Tableau de bord</h2><p class="text-slate-500 text-lg">Suivi global de l'activité DAVID MÉDICAL.</p><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12"><div class="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100"><div class="text-indigo-600 font-extrabold text-5xl mb-2">${tabs.length - 1}</div><div class="text-slate-400 uppercase text-[10px] tracking-[0.2em] font-black">Projets en cours</div></div></div></div>`;
+                contentArea.innerHTML = `<h2 class="text-2xl font-black text-slate-900 mb-4">Tableau de Bord</h2><p class="text-slate-500 text-sm">Sélectionnez un projet pour commencer.</p>`;
                 return;
             }
 
             contentArea.innerHTML = `
-                <div class="flex flex-col gap-10">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
-                        <div>
-                            <h2 class="text-4xl font-black text-slate-900 tracking-tight leading-none editable-text inline-block" contenteditable="true" onblur="window.updateTabTitle('${activeTab.id}', this.innerText)">${activeTab.title}</h2>
-                            <p class="text-slate-400 text-xs uppercase tracking-widest mt-3 font-bold">Projet Actif</p>
-                        </div>
-                        <button onclick="window.addCategory()" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-[1.2rem] text-[10px] font-black uppercase tracking-[0.15em] hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95">
-                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Ajouter Section
-                        </button>
+                <div class="flex flex-col gap-8">
+                    <div class="flex items-center justify-between gap-4">
+                        <input type="text" value="${activeTab.title}" class="font-black text-slate-900 text-3xl outline-none w-full bg-transparent focus:text-cyan-600" onblur="window.updateTabTitle('${activeTab.id}', this.value)">
+                        <button onclick="window.addCategory()" class="shrink-0 px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all">Ajouter Section</button>
                     </div>
-                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-10" id="categories-grid">
-                        ${activeTab.categories.map((cat, idx) => renderCategory(cat, idx)).join('')}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        ${activeTab.categories.map((cat, idx) => `
+                            <div class="category-card p-6 flex flex-col gap-6 animate-card" style="animation-delay: ${idx * 0.05}s">
+                                <div class="flex items-center justify-between gap-2">
+                                    <input type="text" value="${cat.title}" class="font-bold text-slate-800 text-lg outline-none w-full bg-transparent" onblur="window.updateCategoryTitle('${cat.id}', this.value)">
+                                    <button onclick="window.confirmDeleteCategory('${cat.id}')" class="saas-delete-btn"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                                <div class="flex flex-col gap-3">
+                                    ${cat.tasks.map(task => {
+                                        const isDone = task.status === 'done';
+                                        const state = STATES[task.status];
+                                        return `
+                                            <div class="task-item flex items-center justify-between gap-4 ${isDone ? 'task-done' : ''}">
+                                                <div class="flex flex-col gap-1.5 flex-grow">
+                                                    <input type="text" value="${task.text}" class="text-sm font-semibold text-slate-700 outline-none bg-transparent" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
+                                                    <div class="date-container w-fit">
+                                                        <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                        <span>${task.date || '---'}</span>
+                                                        <input type="date" value="${task.date || ''}" class="absolute inset-0 opacity-0 cursor-pointer" onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
+                                                    </div>
+                                                </div>
+                                                <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" class="status-badge ${state.bg} ${state.text}">${state.label}</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                    <input type="text" placeholder="+ Ajouter une tâche..." class="w-full bg-transparent px-4 py-3 rounded-xl text-xs font-bold outline-none border border-dashed border-slate-300 focus:border-cyan-400 focus:border-solid transition-all" onkeydown="if(event.key === 'Enter' && this.value.trim()) { window.addTask('${cat.id}', this.value); this.value=''; }">
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
         }
 
-        function getSortedTasks(tasks) {
-            return [...tasks].sort((a, b) => {
-                if (a.status === 'done' && b.status !== 'done') return 1;
-                if (a.status !== 'done' && b.status === 'done') return -1;
-                const dateA = a.date || '9999-99-99';
-                const dateB = b.date || '9999-99-99';
-                return dateA.localeCompare(dateB);
-            });
-        }
+        window.updateTabTitle = (id, v) => { const t = tabs.find(x => x.id === id); if(t) t.title = v; renderTabs(); };
+        window.addCategory = () => { const activeTab = tabs.find(t => t.id === activeTabId); activeTab.categories.push({ id: 'cat' + Date.now(), title: 'Section', tasks: [] }); render(); };
+        window.updateCategoryTitle = (catId, newTitle) => { const activeTab = tabs.find(t => t.id === activeTabId); const cat = activeTab.categories.find(c => c.id === catId); if (cat) cat.title = newTitle; };
+        window.confirmDeleteCategory = (catId) => { pendingDeleteAction = () => { const activeTab = tabs.find(t => t.id === activeTabId); activeTab.categories = activeTab.categories.filter(c => c.id !== catId); }; document.getElementById('confirm-modal').style.display='flex'; };
+        window.addTask = (catId, text) => { const activeTab = tabs.find(t => t.id === activeTabId); const cat = activeTab.categories.find(c => c.id === catId); cat.tasks.push({ id: 'task' + Date.now(), text, status: 'todo', date: new Date().toISOString().split('T')[0] }); render(); };
+        window.updateTaskText = (cid, tid, text) => { const cat = tabs.find(t => t.id === activeTabId).categories.find(c => c.id === cid); const task = cat.tasks.find(tk => tk.id === tid); task.text = text; };
+        window.updateTaskDate = (cid, tid, date) => { const cat = tabs.find(t => t.id === activeTabId).categories.find(c => c.id === cid); const task = cat.tasks.find(tk => tk.id === tid); task.date = date; render(); };
+        window.cycleStatus = (cid, tid) => { const cat = tabs.find(t => t.id === activeTabId).categories.find(c => c.id === cid); const task = cat.tasks.find(tk => tk.id === tid); const order = ['todo', 'in-progress', 'done']; task.status = order[(order.indexOf(task.status) + 1) % 3]; render(); };
+        
+        function deleteTab(id) { tabs = tabs.filter(t => t.id !== id); if (activeTabId === id) activeTabId = 'dashboard'; render(); }
 
-        function renderCategory(cat, index) {
-            const sortedTasks = getSortedTasks(cat.tasks);
-            const today = new Date().toISOString().split('T')[0];
+        document.getElementById('confirm-delete-btn').onclick = () => { if(pendingDeleteAction) pendingDeleteAction(); document.getElementById('confirm-modal').style.display='none'; render(); };
+        document.getElementById('cancel-delete-btn').onclick = () => document.getElementById('confirm-modal').style.display='none';
+        document.getElementById('notif-bell').onclick = () => { document.getElementById('notif-modal').style.display='flex'; if(window.lucide) window.lucide.createIcons(); };
+        document.getElementById('close-notif-btn').onclick = document.getElementById('dismiss-notif-btn').onclick = () => document.getElementById('notif-modal').style.display='none';
+        document.getElementById('add-tab-btn').onclick = () => { const id = 'tab' + Date.now(); tabs.push({ id, title: 'Nouveau Projet', isDashboard: false, categories: [] }); activeTabId = id; render(); };
 
-            return `
-                <div class="category-card p-10 flex flex-col gap-8 animate-card" style="animation-delay: ${index * 0.1}s">
-                    <div class="flex items-center justify-between gap-4">
-                        <input type="text" value="${cat.title}" class="font-black text-slate-900 text-2xl outline-none w-full bg-transparent focus:text-indigo-600 transition-colors" onblur="window.updateCategoryTitle('${cat.id}', this.value)" onkeydown="if(event.key === 'Enter') this.blur()" placeholder="Nom de la catégorie...">
-                        <button onclick="window.confirmDeleteCategory('${cat.id}')" class="saas-delete-btn p-2"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="flex flex-col gap-4">
-                        ${sortedTasks.map(task => {
-                            const isDone = task.status === 'done';
-                            const isLate = !isDone && task.date && task.date < today;
-                            
-                            const stateStyle = isLate ? LATE_STATUS_STYLE : (STATES[task.status] || STATES['todo']);
-                            const stateLabel = (STATES[task.status] || STATES['todo']).label;
-                            
-                            const formattedDate = task.date ? task.date.split('-').reverse().join('/') : 'Définir';
-
-                            return `
-                                <div class="task-item flex items-center justify-between gap-4 group ${isDone ? 'task-done' : ''}">
-                                    <div class="flex flex-col gap-2 flex-grow">
-                                        <input type="text" value="${task.text}" class="text-base font-bold text-slate-700 outline-none bg-transparent focus:text-indigo-600" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)" onkeydown="if(event.key === 'Enter') this.blur()" placeholder="Que faut-il faire ?">
-                                        <div class="flex items-center gap-3">
-                                            <div class="date-container" title="Cliquer pour modifier la date">
-                                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-600"></i>
-                                                <span class="text-[11px] font-extrabold text-slate-600 uppercase tracking-tighter">
-                                                    ${formattedDate}
-                                                </span>
-                                                <input type="date" value="${task.date || ''}" class="date-input-hidden" onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
-                                            </div>
-                                            ${isLate ? `<div class="late-badge flex items-center gap-1 bg-rose-500 text-white px-2.5 py-1 rounded-full shadow-md"><i data-lucide="alert-circle" class="w-3 h-3"></i><span class="text-[9px] font-black uppercase tracking-widest">Retard</span></div>` : ''}
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-4">
-                                        <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" class="status-badge shadow-sm ${stateStyle.bg} ${stateStyle.text}">${stateLabel}</div>
-                                        <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}')" class="saas-delete-btn opacity-0 group-hover:opacity-100 focus:opacity-100 p-2"><i data-lucide="x" class="w-4 h-4"></i></button>
-                                    </div>
-                                </div>`;
-                        }).join('')}
-                        <div class="mt-6">
-                            <input type="text" placeholder="Nouvelle tâche..." class="w-full bg-[#f8fafc] px-6 py-4 rounded-2xl text-xs font-bold outline-none focus:bg-indigo-50/30 focus:ring-2 focus:ring-indigo-100 transition-all border border-transparent shadow-inner" onkeydown="if(event.key === 'Enter' && this.value.trim()) { window.addTask('${cat.id}', this.value); this.value=''; }">
-                        </div>
-                    </div>
-                </div>`;
-        }
-
-        window.updateTabTitle = (tabId, newTitle) => {
-            const tab = tabs.find(t => t.id === tabId);
-            if (tab && newTitle.trim()) { tab.title = newTitle.trim(); renderTabs(); }
-        };
-
-        window.confirmDeleteCategory = (catId) => {
-            requestConfirmation(() => {
-                const activeTab = tabs.find(t => t.id === activeTabId);
-                activeTab.categories = activeTab.categories.filter(c => c.id !== catId);
-                render();
-            });
-        };
-
-        window.confirmDeleteTask = (catId, taskId) => {
-            requestConfirmation(() => {
-                const activeTab = tabs.find(t => t.id === activeTabId);
-                const cat = activeTab.categories.find(c => c.id === catId);
-                cat.tasks = cat.tasks.filter(t => t.id !== taskId);
-                render();
-            });
-        };
-
-        window.cycleStatus = (catId, taskId) => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            const cat = activeTab.categories.find(c => c.id === catId);
-            const task = cat.tasks.find(t => t.id === taskId);
-            const statusOrder = ['todo', 'in-progress', 'done'];
-            task.status = statusOrder[(statusOrder.indexOf(task.status) + 1) % statusOrder.length];
-            render();
-        };
-
-        window.updateTaskDate = (catId, taskId, newDate) => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            const cat = activeTab.categories.find(c => c.id === catId);
-            const task = cat.tasks.find(t => t.id === taskId);
-            task.date = newDate;
-            render();
-        };
-
-        window.addCategory = () => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            activeTab.categories.push({ id: 'cat' + Date.now(), title: 'Nouvelle Section', tasks: [] });
-            render();
-        };
-
-        window.updateCategoryTitle = (catId, newTitle) => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            const cat = activeTab.categories.find(c => c.id === catId);
-            if (cat && newTitle.trim()) cat.title = newTitle.trim();
-        };
-
-        window.addTask = (catId, text = '') => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            const cat = activeTab.categories.find(c => c.id === catId);
-            cat.tasks.push({ id: 'task' + Date.now(), text: text || 'Nouvelle tâche', status: 'todo', date: new Date().toISOString().split('T')[0] });
-            render();
-        };
-
-        window.updateTaskText = (catId, taskId, newText) => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            const cat = activeTab.categories.find(c => c.id === catId);
-            const task = cat.tasks.find(t => t.id === taskId);
-            if (task && newText.trim()) task.text = newText.trim();
-        };
-
-        function deleteTab(id) {
-            tabs = tabs.filter(t => t.id !== id);
-            if (activeTabId === id) activeTabId = 'dashboard';
-            render();
-        }
-
-        addBtn.onclick = () => {
-            const newId = 'tab' + Date.now();
-            tabs.push({ id: newId, title: 'Nouveau Projet', isDashboard: false, categories: [] });
-            activeTabId = newId;
-            render();
-        };
-
-        async function initAuth() {
-            try { await signInAnonymously(auth); render(); } catch (e) { render(); }
-        }
+        async function initAuth() { try { await signInAnonymously(auth); render(); } catch (e) { render(); } }
         initAuth();
     </script>
 </body>
