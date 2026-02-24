@@ -44,32 +44,27 @@
             color: #334155;
         }
 
-        .tab-action-btn {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .nav-tab:hover .tab-action-btn {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .delete-btn-premium {
+        /* Bouton suppression SaaS Style (Rouge Moderne) */
+        .saas-delete-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: transparent;
-            color: #94a3b8;
-            transition: all 0.2s ease;
+            background-color: #fef2f2;
+            color: #ef4444;
+            border-radius: 0.75rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #fee2e2;
         }
 
-        .delete-btn-premium:hover {
-            background: #fee2e2;
-            color: #ef4444;
+        .saas-delete-btn:hover {
+            background-color: #fee2e2;
+            color: #dc2626;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
+        }
+
+        .saas-delete-btn:active {
+            transform: scale(0.95);
         }
 
         .category-card {
@@ -95,20 +90,16 @@
         .category-card:hover {
             border-color: #e2e8f0;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .category-card:hover::before {
-            opacity: 1;
         }
 
         .task-item {
-            border-radius: 0.75rem;
+            border-radius: 1rem;
             transition: all 0.2s ease;
         }
 
         .task-item:hover {
             background: #f8fafc;
+            border-color: #e2e8f0;
         }
 
         .status-badge {
@@ -130,12 +121,8 @@
 
         input[type="date"] {
             color-scheme: light;
-        }
-
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            opacity: 0.4;
-            cursor: pointer;
-            filter: invert(0.5);
+            border: none;
+            background: transparent;
         }
 
         #tabs-container::-webkit-scrollbar { display: none; }
@@ -183,7 +170,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
-        // Définition des états de tâche
         const STATES = {
             'todo': { label: 'À faire', bg: 'bg-slate-100', text: 'text-slate-600' },
             'in-progress': { label: 'En cours', bg: 'bg-amber-100', text: 'text-amber-700' },
@@ -250,8 +236,8 @@
 
                 if (!tab.isDashboard) {
                     const del = document.createElement('button');
-                    del.className = 'delete-btn-premium tab-action-btn ml-1';
-                    del.innerHTML = '<i data-lucide="x" class="w-3.5 h-3.5"></i>';
+                    del.className = 'saas-delete-btn w-6 h-6 ml-2';
+                    del.innerHTML = '<i data-lucide="x" class="w-3 h-3"></i>';
                     del.onclick = (e) => { e.stopPropagation(); deleteTab(tab.id); };
                     tabEl.appendChild(del);
                 }
@@ -305,8 +291,9 @@
                             class="font-extrabold text-slate-800 text-lg outline-none w-full bg-transparent focus:text-indigo-600 placeholder:text-slate-300"
                             onblur="window.updateCategoryTitle('${cat.id}', this.value)"
                             placeholder="Titre de catégorie">
-                        <button onclick="window.deleteCategory('${cat.id}')" class="text-slate-300 hover:text-rose-500 p-2 transition-colors rounded-xl hover:bg-rose-50">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <button onclick="window.deleteCategory('${cat.id}')" 
+                                class="saas-delete-btn w-9 h-9">
+                            <i data-lucide="x" class="w-5 h-5"></i>
                         </button>
                     </div>
                     
@@ -314,7 +301,7 @@
                         ${cat.tasks.map(task => {
                             const state = STATES[task.status] || STATES['todo'];
                             return `
-                                <div class="task-item flex flex-col sm:flex-row sm:items-center gap-4 p-4 group border border-transparent hover:border-slate-100">
+                                <div class="task-item flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-slate-100 shadow-sm bg-white">
                                     <div class="flex items-center gap-4 flex-grow">
                                         <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" 
                                              class="status-badge px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-sm ${state.bg} ${state.text}">
@@ -327,15 +314,16 @@
                                     </div>
                                     
                                     <div class="flex items-center gap-4 justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-50">
-                                        <div class="flex items-center gap-2">
-                                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-300"></i>
+                                        <div class="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-lg">
+                                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
                                             <input type="date" value="${task.date || ''}"
-                                                class="text-[11px] font-bold text-slate-500 bg-transparent outline-none uppercase"
+                                                class="text-[11px] font-bold text-slate-500 outline-none uppercase"
                                                 onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
                                         </div>
                                         
-                                        <button onclick="window.deleteTask('${cat.id}', '${task.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 p-1.5 transition-all rounded-lg hover:bg-rose-50">
-                                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                        <button onclick="window.deleteTask('${cat.id}', '${task.id}')" 
+                                                class="saas-delete-btn w-8 h-8">
+                                            <i data-lucide="x" class="w-4 h-4"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -361,7 +349,6 @@
             const activeTab = tabs.find(t => t.id === activeTabId);
             const cat = activeTab.categories.find(c => c.id === catId);
             const task = cat.tasks.find(t => t.id === taskId);
-            
             const statusOrder = ['todo', 'in-progress', 'done'];
             let currentIndex = statusOrder.indexOf(task.status);
             task.status = statusOrder[(currentIndex + 1) % statusOrder.length];
