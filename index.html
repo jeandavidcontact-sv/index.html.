@@ -93,12 +93,18 @@
 
         .task-item {
             border-radius: 1rem;
-            transition: all 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .task-item:hover {
             background: #f8fafc;
             border-color: #e2e8f0;
+        }
+
+        .task-done {
+            opacity: 0.5;
+            background-color: #f1f5f9;
+            border-color: transparent;
         }
 
         .status-badge {
@@ -245,7 +251,8 @@
                         title: 'Phase Initiale',
                         tasks: [
                             { id: 't1', text: 'Analyse des besoins', status: 'done', date: '2024-03-20' },
-                            { id: 't2', text: 'Validation devis', status: 'in-progress', date: '2024-03-25' }
+                            { id: 't2', text: 'Validation devis', status: 'in-progress', date: '2024-03-25' },
+                            { id: 't3', text: 'Réunion de lancement', status: 'todo', date: '2024-03-15' }
                         ]
                     }
                 ] 
@@ -362,7 +369,22 @@
             `;
         }
 
+        function getSortedTasks(tasks) {
+            return [...tasks].sort((a, b) => {
+                // Règle 1: Tâches terminées toujours en dernier
+                if (a.status === 'done' && b.status !== 'done') return 1;
+                if (a.status !== 'done' && b.status === 'done') return -1;
+                
+                // Règle 2: Tri par date (chronologique)
+                const dateA = a.date || '9999-99-99';
+                const dateB = b.date || '9999-99-99';
+                return dateA.localeCompare(dateB);
+            });
+        }
+
         function renderCategory(cat) {
+            const sortedTasks = getSortedTasks(cat.tasks);
+
             return `
                 <div class="category-card rounded-[2.5rem] p-7 flex flex-col gap-6">
                     <div class="flex items-center justify-between gap-2 border-b border-slate-50 pb-4">
@@ -377,17 +399,18 @@
                     </div>
                     
                     <div class="flex flex-col gap-3">
-                        ${cat.tasks.map(task => {
+                        ${sortedTasks.map(task => {
                             const state = STATES[task.status] || STATES['todo'];
+                            const isDone = task.status === 'done';
                             return `
-                                <div class="task-item flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-slate-100 shadow-sm bg-white">
+                                <div class="task-item flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-slate-100 shadow-sm bg-white ${isDone ? 'task-done' : ''}">
                                     <div class="flex items-center gap-4 flex-grow">
                                         <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" 
                                              class="status-badge px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-sm ${state.bg} ${state.text}">
                                             ${state.label}
                                         </div>
                                         <input type="text" value="${task.text}" 
-                                            class="text-sm font-semibold text-slate-700 outline-none flex-grow bg-transparent transition-all ${task.status === 'done' ? 'line-through opacity-40 italic' : ''}"
+                                            class="text-sm font-semibold text-slate-700 outline-none flex-grow bg-transparent transition-all ${isDone ? 'line-through opacity-40 italic' : ''}"
                                             onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)"
                                             placeholder="Description de la tâche">
                                     </div>
@@ -456,6 +479,7 @@
             const cat = activeTab.categories.find(c => c.id === catId);
             const task = cat.tasks.find(t => t.id === taskId);
             task.date = newDate;
+            render(); // Re-render pour appliquer le tri par date
         };
 
         window.addCategory = () => {
