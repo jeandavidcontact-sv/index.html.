@@ -14,7 +14,7 @@
             margin: 0;
             padding: 0;
             color: #334155;
-            background-color: #f8fafc; /* Fond global très clair */
+            background-color: #f8fafc;
         }
 
         .premium-header {
@@ -42,27 +42,30 @@
             box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
         }
 
+        /* Boutons de suppression forcés en rouge */
         .saas-delete-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #94a3b8;
+            color: #ef4444; /* Rouge par défaut */
             transition: all 0.2s ease;
             cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
         }
 
         .saas-delete-btn:hover {
-            color: #ef4444;
+            background-color: #fee2e2;
+            transform: scale(1.1);
         }
 
-        /* --- Palette "Innovation Médicale" --- */
         .category-card {
-            background: #f1f5f9; /* Fond gris bleuté doux pour la section */
+            background: #f1f5f9;
             border-radius: 2rem;
             border: 1px solid #e2e8f0;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
             transition: all 0.3s ease;
-            border-top: 4px solid #06b6d4; /* Accent Cyan */
+            border-top: 4px solid #06b6d4;
         }
 
         .category-card:hover {
@@ -73,7 +76,7 @@
         .task-item {
             border-radius: 1.25rem;
             padding: 1rem 1.25rem;
-            background: #ffffff; /* Blanc pur pour ressortir */
+            background: #ffffff;
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             transition: all 0.2s ease;
@@ -81,7 +84,6 @@
 
         .task-item:hover {
             border-color: #06b6d4;
-            transform: scale(1.01);
         }
 
         .task-done {
@@ -115,7 +117,28 @@
             color: #64748b;
         }
 
-        #confirm-modal, #notif-modal {
+        .late-badge {
+            background: #fef2f2;
+            color: #ef4444;
+            border: 1px solid #fee2e2;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            animation: pulse-soft 2s infinite;
+        }
+
+        @keyframes pulse-soft {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        #confirm-modal, #notif-modal, #late-info-modal {
             display: none;
             position: fixed;
             inset: 0;
@@ -178,7 +201,7 @@
         
     </div>
 
-    <!-- Modals -->
+    <!-- Modales -->
     <div id="notif-modal">
         <div class="modal-card">
             <div class="flex items-center justify-between mb-6">
@@ -192,14 +215,23 @@
         </div>
     </div>
 
+    <div id="late-info-modal">
+        <div class="modal-card text-center">
+            <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-4 mx-auto"><i data-lucide="clock" class="w-6 h-6"></i></div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Délai dépassé</h3>
+            <p id="late-info-text" class="text-slate-500 text-xs mb-6"></p>
+            <button onclick="document.getElementById('late-info-modal').style.display='none'" class="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-sm">Fermer</button>
+        </div>
+    </div>
+
     <div id="confirm-modal">
         <div class="modal-card text-center">
             <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-4 mx-auto"><i data-lucide="trash-2" class="w-6 h-6"></i></div>
             <h3 class="text-lg font-bold text-slate-900 mb-1">Confirmer ?</h3>
-            <p class="text-slate-500 text-xs mb-6">Cette action est définitive.</p>
+            <p id="confirm-desc" class="text-slate-500 text-xs mb-6">Cette action est définitive.</p>
             <div class="flex gap-2">
-                <button id="confirm-delete-btn" class="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl text-sm">Supprimer</button>
-                <button id="cancel-delete-btn" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm">Annuler</button>
+                <button id="confirm-delete-btn" class="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl text-sm transition-all active:scale-95">Supprimer</button>
+                <button id="cancel-delete-btn" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm transition-all active:scale-95">Annuler</button>
             </div>
         </div>
     </div>
@@ -223,7 +255,8 @@
             { id: 'tab2', title: 'Clinique Pasteur', isDashboard: false, categories: [
                 { id: 'cat1', title: 'Déploiement Logiciel', tasks: [
                     { id: 't1', text: 'Configuration des serveurs', status: 'done', date: '2024-03-20' },
-                    { id: 't2', text: 'Formation du personnel', status: 'in-progress', date: '2024-03-28' }
+                    { id: 't2', text: 'Formation du personnel', status: 'in-progress', date: '2024-03-28' },
+                    { id: 't3', text: 'Audit de sécurité initial', status: 'todo', date: '2024-01-15' }
                 ]}
             ]}
         ];
@@ -233,12 +266,25 @@
 
         const container = document.getElementById('tabs-container');
         const contentArea = document.getElementById('main-content');
+
+        function formatDateFR(dateStr) {
+            if (!dateStr) return '---';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
         
         function render() {
             renderTabs();
             renderContent();
             updateNotifications();
             if (window.lucide) window.lucide.createIcons();
+        }
+
+        function isLate(dateStr, status) {
+            if (!dateStr || status === 'done') return false;
+            const today = new Date().toISOString().split('T')[0];
+            return dateStr < today;
         }
 
         function updateNotifications() {
@@ -263,6 +309,7 @@
                     <div class="p-3 bg-rose-50 border border-rose-100 rounded-xl">
                         <div class="text-[8px] font-black uppercase text-slate-400 mb-0.5">${task.tabTitle}</div>
                         <div class="text-xs font-bold text-slate-800">${task.text}</div>
+                        <div class="text-[9px] text-rose-600 font-bold mt-1">Échéance : ${formatDateFR(task.date)}</div>
                     </div>
                 `).join('');
             } else {
@@ -276,13 +323,19 @@
             tabs.forEach(tab => {
                 const isActive = tab.id === activeTabId;
                 const tabEl = document.createElement('div');
-                tabEl.className = `nav-tab cursor-pointer text-[10px] font-bold uppercase tracking-wider ${isActive ? 'active' : 'text-slate-500 hover:text-slate-800'}`;
+                tabEl.className = `nav-tab cursor-pointer text-[10px] font-bold uppercase tracking-wider flex items-center ${isActive ? 'active' : 'text-slate-500 hover:text-slate-800'}`;
                 tabEl.innerHTML = `<span>${tab.title}</span>`;
                 if (!tab.isDashboard) {
                     const del = document.createElement('button');
+                    // Couleur rouge explicite
                     del.className = 'saas-delete-btn ml-2';
-                    del.innerHTML = '<i data-lucide="x" class="w-3 h-3"></i>';
-                    del.onclick = (e) => { e.stopPropagation(); pendingDeleteAction = () => deleteTab(tab.id); document.getElementById('confirm-modal').style.display='flex'; };
+                    del.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
+                    del.onclick = (e) => { 
+                        e.stopPropagation(); 
+                        pendingDeleteAction = () => deleteTab(tab.id); 
+                        document.getElementById('confirm-desc').innerText = `Voulez-vous supprimer le projet "${tab.title}" ?`;
+                        document.getElementById('confirm-modal').style.display='flex'; 
+                    };
                     tabEl.appendChild(del);
                 }
                 tabEl.onclick = () => { activeTabId = tab.id; render(); };
@@ -306,43 +359,98 @@
                         <button onclick="window.addCategory()" class="shrink-0 px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-all">Ajouter Section</button>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        ${activeTab.categories.map((cat, idx) => `
-                            <div class="category-card p-6 flex flex-col gap-6 animate-card" style="animation-delay: ${idx * 0.05}s">
-                                <div class="flex items-center justify-between gap-2">
-                                    <input type="text" value="${cat.title}" class="font-bold text-slate-800 text-lg outline-none w-full bg-transparent" onblur="window.updateCategoryTitle('${cat.id}', this.value)">
-                                    <button onclick="window.confirmDeleteCategory('${cat.id}')" class="saas-delete-btn"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </div>
-                                <div class="flex flex-col gap-3">
-                                    ${cat.tasks.map(task => {
-                                        const isDone = task.status === 'done';
-                                        const state = STATES[task.status];
-                                        return `
-                                            <div class="task-item flex items-center justify-between gap-4 ${isDone ? 'task-done' : ''}">
-                                                <div class="flex flex-col gap-1.5 flex-grow">
-                                                    <input type="text" value="${task.text}" class="text-sm font-semibold text-slate-700 outline-none bg-transparent" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
-                                                    <div class="date-container w-fit">
-                                                        <i data-lucide="calendar" class="w-3 h-3"></i>
-                                                        <span>${task.date || '---'}</span>
-                                                        <input type="date" value="${task.date || ''}" class="absolute inset-0 opacity-0 cursor-pointer" onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
+                        ${activeTab.categories.map((cat, idx) => {
+                            const sortedTasks = [...cat.tasks].sort((a, b) => {
+                                const aLate = isLate(a.date, a.status);
+                                const bLate = isLate(b.date, b.status);
+                                const aDone = a.status === 'done';
+                                const bDone = b.status === 'done';
+                                if (aDone && !bDone) return 1;
+                                if (!aDone && bDone) return -1;
+                                if (aLate && !bLate) return -1;
+                                if (!aLate && bLate) return 1;
+                                if (a.date && b.date) return a.date.localeCompare(b.date);
+                                return 0;
+                            });
+
+                            return `
+                                <div class="category-card p-6 flex flex-col gap-6 animate-card" style="animation-delay: ${idx * 0.05}s">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <input type="text" value="${cat.title}" class="font-bold text-slate-800 text-lg outline-none w-full bg-transparent" onblur="window.updateCategoryTitle('${cat.id}', this.value)">
+                                        <button onclick="window.confirmDeleteCategory('${cat.id}', '${cat.title.replace(/'/g, "\\'")}')" class="saas-delete-btn">
+                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+                                    <div class="flex flex-col gap-3">
+                                        ${sortedTasks.map(task => {
+                                            const isDone = task.status === 'done';
+                                            const state = STATES[task.status];
+                                            const taskIsLate = isLate(task.date, task.status);
+                                            const displayDate = formatDateFR(task.date);
+                                            return `
+                                                <div class="task-item flex items-center justify-between gap-4 ${isDone ? 'task-done' : ''}">
+                                                    <div class="flex flex-col gap-1.5 flex-grow">
+                                                        <input type="text" value="${task.text}" class="text-sm font-semibold text-slate-700 outline-none bg-transparent" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="date-container w-fit">
+                                                                <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                                <span>${displayDate}</span>
+                                                                <input type="date" value="${task.date || ''}" class="absolute inset-0 opacity-0 cursor-pointer" onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
+                                                            </div>
+                                                            ${taskIsLate ? `
+                                                                <div class="late-badge cursor-pointer" onclick="window.showLateInfo('${task.text.replace(/'/g, "\\'")}', '${displayDate}')">
+                                                                    <i data-lucide="clock" class="w-2 h-2"></i> Retard
+                                                                </div>
+                                                            ` : ''}
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-3">
+                                                        <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" class="status-badge ${state.bg} ${state.text}">${state.label}</div>
+                                                        <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}', '${task.text.replace(/'/g, "\\'")}')" class="saas-delete-btn">
+                                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" class="status-badge ${state.bg} ${state.text}">${state.label}</div>
-                                            </div>
-                                        `;
-                                    }).join('')}
-                                    <input type="text" placeholder="+ Ajouter une tâche..." class="w-full bg-transparent px-4 py-3 rounded-xl text-xs font-bold outline-none border border-dashed border-slate-300 focus:border-cyan-400 focus:border-solid transition-all" onkeydown="if(event.key === 'Enter' && this.value.trim()) { window.addTask('${cat.id}', this.value); this.value=''; }">
+                                            `;
+                                        }).join('')}
+                                        <input type="text" placeholder="+ Ajouter une tâche..." class="w-full bg-transparent px-4 py-3 rounded-xl text-xs font-bold outline-none border border-dashed border-slate-300 focus:border-cyan-400 focus:border-solid transition-all" onkeydown="if(event.key === 'Enter' && this.value.trim()) { window.addTask('${cat.id}', this.value); this.value=''; }">
+                                    </div>
                                 </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `;
         }
 
+        window.showLateInfo = (name, formattedDate) => {
+            document.getElementById('late-info-text').innerText = `La tâche "${name}" était prévue pour le ${formattedDate}. Elle est actuellement en retard.`;
+            document.getElementById('late-info-modal').style.display = 'flex';
+        };
+
         window.updateTabTitle = (id, v) => { const t = tabs.find(x => x.id === id); if(t) t.title = v; renderTabs(); };
         window.addCategory = () => { const activeTab = tabs.find(t => t.id === activeTabId); activeTab.categories.push({ id: 'cat' + Date.now(), title: 'Section', tasks: [] }); render(); };
         window.updateCategoryTitle = (catId, newTitle) => { const activeTab = tabs.find(t => t.id === activeTabId); const cat = activeTab.categories.find(c => c.id === catId); if (cat) cat.title = newTitle; };
-        window.confirmDeleteCategory = (catId) => { pendingDeleteAction = () => { const activeTab = tabs.find(t => t.id === activeTabId); activeTab.categories = activeTab.categories.filter(c => c.id !== catId); }; document.getElementById('confirm-modal').style.display='flex'; };
+        
+        window.confirmDeleteCategory = (catId, catTitle) => { 
+            pendingDeleteAction = () => { 
+                const activeTab = tabs.find(t => t.id === activeTabId); 
+                activeTab.categories = activeTab.categories.filter(c => c.id !== catId); 
+            }; 
+            document.getElementById('confirm-desc').innerText = `Voulez-vous supprimer la section "${catTitle}" et toutes ses tâches ?`;
+            document.getElementById('confirm-modal').style.display='flex'; 
+        };
+
+        window.confirmDeleteTask = (catId, taskId, taskText) => {
+            pendingDeleteAction = () => {
+                const activeTab = tabs.find(t => t.id === activeTabId);
+                const cat = activeTab.categories.find(c => c.id === catId);
+                if (cat) cat.tasks = cat.tasks.filter(tk => tk.id !== taskId);
+            };
+            document.getElementById('confirm-desc').innerText = `Voulez-vous supprimer la tâche "${taskText}" ?`;
+            document.getElementById('confirm-modal').style.display='flex';
+        };
+
         window.addTask = (catId, text) => { const activeTab = tabs.find(t => t.id === activeTabId); const cat = activeTab.categories.find(c => c.id === catId); cat.tasks.push({ id: 'task' + Date.now(), text, status: 'todo', date: new Date().toISOString().split('T')[0] }); render(); };
         window.updateTaskText = (cid, tid, text) => { const cat = tabs.find(t => t.id === activeTabId).categories.find(c => c.id === cid); const task = cat.tasks.find(tk => tk.id === tid); task.text = text; };
         window.updateTaskDate = (cid, tid, date) => { const cat = tabs.find(t => t.id === activeTabId).categories.find(c => c.id === cid); const task = cat.tasks.find(tk => tk.id === tid); task.date = date; render(); };
@@ -351,7 +459,7 @@
         function deleteTab(id) { tabs = tabs.filter(t => t.id !== id); if (activeTabId === id) activeTabId = 'dashboard'; render(); }
 
         document.getElementById('confirm-delete-btn').onclick = () => { if(pendingDeleteAction) pendingDeleteAction(); document.getElementById('confirm-modal').style.display='none'; render(); };
-        document.getElementById('cancel-delete-btn').onclick = () => document.getElementById('confirm-modal').style.display='none';
+        document.getElementById('cancel-delete-btn').onclick = () => { pendingDeleteAction = null; document.getElementById('confirm-modal').style.display='none'; };
         document.getElementById('notif-bell').onclick = () => { document.getElementById('notif-modal').style.display='flex'; if(window.lucide) window.lucide.createIcons(); };
         document.getElementById('close-notif-btn').onclick = document.getElementById('dismiss-notif-btn').onclick = () => document.getElementById('notif-modal').style.display='none';
         document.getElementById('add-tab-btn').onclick = () => { const id = 'tab' + Date.now(); tabs.push({ id, title: 'Nouveau Projet', isDashboard: false, categories: [] }); activeTabId = id; render(); };
