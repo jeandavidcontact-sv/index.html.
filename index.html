@@ -3,404 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>David Médical - Dashboard Cloud</title>
+    <title>Gestionnaire de Projet CapDavid</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        :root {
-            --dark-navy: #111827;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-
-        .dark-header {
-            background-color: var(--dark-navy);
-            color: white;
-            border-bottom-left-radius: 40px;
-            border-bottom-right-radius: 40px;
-        }
-
-        .tab-btn {
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .tab-btn.active {
-            background-color: white;
-            color: var(--dark-navy);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-
-        .countdown-value {
-            font-size: 1.75rem;
-            font-weight: 800;
-        }
-
-        .glass-card {
-            background: white;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            border-radius: 24px;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .progress-bar-bg {
-            background-color: #f1f5f9;
-            height: 8px;
-            border-radius: 4px;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-
-        .health-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .animate-fade { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        #loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: white;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .task-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        [v-cloak] { display: none; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900">
 
-    <div id="loading-overlay">
-        <div class="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p id="loading-text" class="text-slate-500 font-bold text-sm tracking-widest uppercase text-center px-4">Initialisation Cloud...</p>
-    </div>
+    <div id="app" class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-indigo-700 flex items-center gap-2">
+                    <i data-lucide="layout"></i> CapDavid Project Tracker
+                </h1>
+                <p class="text-slate-500 mt-1">Suivez l'avancement de vos tâches en temps réel.</p>
+            </div>
+            <div id="auth-status" class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
+                <div class="w-3 h-3 rounded-full bg-amber-400 animate-pulse" id="status-dot"></div>
+                <span id="user-id-display" class="text-sm font-medium text-slate-600">Connexion en cours...</span>
+            </div>
+        </header>
 
-    <!-- HEADER -->
-    <header class="dark-header w-full px-6 py-8 sm:px-12 shadow-2xl mb-8">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-            <div class="health-badge flex items-center gap-4 px-5 py-3 rounded-2xl border border-white/10">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-[10px] font-bold text-emerald-400 tracking-widest uppercase">SANTÉ</span>
-                        <div id="health-indicators" class="flex gap-1"></div>
-                    </div>
-                    <div class="flex items-center">
-                        <span id="late-badge" class="bg-white/10 text-[10px] px-2 py-0.5 rounded text-white/70 font-bold tracking-tight">0 Retard</span>
-                    </div>
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-500 font-medium">Progression Totale</span>
+                    <i data-lucide="trending-up" class="text-indigo-500"></i>
+                </div>
+                <div class="flex items-end gap-2">
+                    <span id="progress-percent" class="text-3xl font-bold">0%</span>
+                </div>
+                <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
+                    <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
                 </div>
             </div>
-
-            <div class="text-center">
-                <h1 class="text-4xl md:text-5xl font-black tracking-tighter mb-4 uppercase">DAVID MÉDICAL</h1>
-                <div class="flex justify-center items-center gap-8 border-t border-white/10 pt-4">
-                    <div class="flex flex-col">
-                        <span id="days" class="countdown-value">000</span>
-                        <span class="text-[10px] uppercase tracking-widest text-white/40 font-bold">Jours</span>
-                    </div>
-                    <div class="w-[1px] h-10 bg-white/10"></div>
-                    <div class="flex flex-col">
-                        <span id="hours" class="countdown-value">00</span>
-                        <span class="text-[10px] uppercase tracking-widest text-white/40 font-bold">Heures</span>
-                    </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-500 font-medium">Tâches Ouvertes</span>
+                    <i data-lucide="list-todo" class="text-amber-500"></i>
                 </div>
+                <span id="open-tasks-count" class="text-3xl font-bold">0</span>
             </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-slate-500 font-medium">Terminées</span>
+                    <i data-lucide="check-circle" class="text-emerald-500"></i>
+                </div>
+                <span id="completed-tasks-count" class="text-3xl font-bold">0</span>
+            </div>
+        </div>
 
-            <div class="flex items-center gap-4">
-                <div id="user-status" class="text-[10px] text-white/30 hidden md:block italic">Connexion...</div>
-                <button class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all border border-white/5 relative">
-                    <i class="fas fa-bell text-sm"></i>
-                    <span id="notif-dot" class="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+        <!-- Add Task Form -->
+        <section class="mb-10 bg-white p-6 rounded-xl shadow-sm border border-indigo-100">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> Nouvelle Tâche
+            </h2>
+            <form id="task-form" class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="task-title" placeholder="Titre de la tâche..." required
+                    class="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <select id="task-priority" class="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none">
+                    <option value="low">Priorité Basse</option>
+                    <option value="medium" selected>Priorité Moyenne</option>
+                    <option value="high">Priorité Haute</option>
+                </select>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                    Ajouter
                 </button>
-            </div>
-        </div>
-    </header>
+            </form>
+        </section>
 
-    <div class="max-w-7xl mx-auto px-6 mb-8">
-        <div class="bg-slate-200/50 p-1.5 rounded-2xl flex items-center gap-1 overflow-x-auto no-scrollbar">
-            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
-                Tableau de bord
-            </button>
-            <div id="dynamic-tabs" class="flex items-center gap-1"></div>
-            <button onclick="addNewPole()" class="ml-auto w-10 h-10 flex items-center justify-center text-slate-500 hover:text-indigo-600 transition-colors">
-                <i class="fas fa-plus-circle text-lg"></i>
-            </button>
+        <!-- Kanban Board -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- To Do -->
+            <div class="kanban-column">
+                <h3 class="font-bold text-slate-700 mb-4 flex items-center justify-between px-2">
+                    À FAIRE <span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-xs" id="todo-count">0</span>
+                </h3>
+                <div id="col-todo" class="space-y-4 min-h-[200px]"></div>
+            </div>
+
+            <!-- In Progress -->
+            <div class="kanban-column">
+                <h3 class="font-bold text-indigo-700 mb-4 flex items-center justify-between px-2">
+                    EN COURS <span class="bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded text-xs" id="doing-count">0</span>
+                </h3>
+                <div id="col-doing" class="space-y-4 min-h-[200px]"></div>
+            </div>
+
+            <!-- Done -->
+            <div class="kanban-column">
+                <h3 class="font-bold text-emerald-700 mb-4 flex items-center justify-between px-2">
+                    TERMINÉ <span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-xs" id="done-count">0</span>
+                </h3>
+                <div id="col-done" class="space-y-4 min-h-[200px]"></div>
+            </div>
         </div>
     </div>
 
-    <main id="main-content" class="max-w-7xl mx-auto px-6 pb-20"></main>
-
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURATION FIREBASE
+        // Configuration fournie par l'utilisateur
         const firebaseConfig = {
             apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
             authDomain: "capdavid-5cb65.firebaseapp.com",
+            databaseURL: "https://capdavid-5cb65-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "capdavid-5cb65",
             storageBucket: "capdavid-5cb65.firebasestorage.app",
             messagingSenderId: "346917679110",
-            appId: "1:346917679110:web:2b76ad31621eec618ed387"
+            appId: "1:346917679110:web:2b76ad31621eec618ed387",
+            measurementId: "G-GHTM9M5WCD"
         };
 
+        // Initialisation
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
         const auth = getAuth(app);
+        const db = getFirestore(app);
         
-        // Identifiants d'environnement
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'capdavid-5cb65';
-        let currentUser = null;
-        let state = { poles: [], activeTab: 'dashboard' };
+        // Identifiant de l'application pour Firestore (Public Data)
+        const appId = "capdavid-tracker";
+        const tasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
 
-        // INITIALISATION & SYNC
-        const init = async () => {
-            const loadingText = document.getElementById('loading-text');
-            try {
-                // Authentification anonyme pour accéder à Firestore
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Erreur Auth:", error);
-                loadingText.innerText = "Erreur de connexion cloud.";
+        let currentUser = null;
+
+        // Éléments DOM
+        const taskForm = document.getElementById('task-form');
+        const taskTitleInput = document.getElementById('task-title');
+        const taskPriorityInput = document.getElementById('task-priority');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const statusDot = document.getElementById('status-dot');
+
+        // Initialisation des icônes Lucide avec vérification de sécurité
+        const refreshIcons = () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else {
+                console.warn("Lucide library not ready yet.");
             }
         };
+
+        // 1. Authentification
+        async function initAuth() {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Auth error:", error);
+                userIdDisplay.innerText = "Erreur de connexion";
+            }
+        }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById('user-status').innerText = `Cloud Connecté (${user.uid.substring(0,5)})`;
-                setupSubscription();
+                userIdDisplay.innerText = `ID: ${user.uid.substring(0, 8)}...`;
+                statusDot.classList.remove('bg-amber-400');
+                statusDot.classList.add('bg-emerald-400');
+                statusDot.classList.remove('animate-pulse');
+                
+                // Charger les données une fois authentifié
+                subscribeToTasks();
             }
         });
 
-        const setupSubscription = () => {
-            // Chemin conforme aux règles de l'environnement (nombre pair de segments pour un doc)
-            const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'main', 'state');
-            
-            onSnapshot(stateDocRef, (snap) => {
-                if (snap.exists()) {
-                    state = snap.data();
-                } else {
-                    // Création de l'état initial s'il n'existe pas
-                    state = {
-                        poles: [
-                            { id: 'p1', name: 'Mobiliers / Immobiliers', categories: [] },
-                            { id: 'p2', name: 'Juridique / Administratif', categories: [] }
-                        ],
-                        activeTab: 'dashboard'
-                    };
-                    saveToCloud();
-                }
-                document.getElementById('loading-overlay').style.display = 'none';
-                render();
-            }, (err) => {
-                console.error("Erreur Sync:", err);
-                document.getElementById('loading-text').innerText = "Vérifiez vos règles Firestore.";
-            });
-        };
-
-        const saveToCloud = async () => {
-            if (!currentUser) return;
-            const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'main', 'state');
-            try {
-                await setDoc(stateDocRef, state);
-            } catch (e) {
-                console.error("Erreur sauvegarde:", e);
-            }
-        };
-
-        // FONCTIONS GLOBALES
-        window.switchTab = (id) => { state.activeTab = id; render(); saveToCloud(); };
-        
-        window.addNewPole = () => {
-            const n = prompt("Nom du nouveau pôle ?");
-            if (n) {
-                const id = 'p' + Date.now();
-                state.poles.push({ id, name: n, categories: [] });
-                state.activeTab = id;
-                render();
-                saveToCloud();
-            }
-        };
-
-        window.removePole = (id, e) => {
-            e.stopPropagation();
-            if(confirm("Supprimer ce pôle ?")) {
-                state.poles = state.poles.filter(p => p.id !== id);
-                state.activeTab = 'dashboard';
-                render();
-                saveToCloud();
-            }
-        };
-
-        window.addCategory = (pId) => {
-            const inp = document.getElementById(`new-cat-${pId}`);
-            if (inp && inp.value.trim()) {
-                state.poles.find(p => p.id === pId).categories.push({ id: 'c'+Date.now(), name: inp.value, tasks: [] });
-                inp.value = '';
-                render();
-                saveToCloud();
-            }
-        };
-
-        window.addTask = (pId, cId) => {
-            const tInp = document.getElementById(`ti-${cId}`);
-            const dInp = document.getElementById(`td-${cId}`);
-            if (tInp && tInp.value.trim()) {
-                state.poles.find(p => p.id === pId).categories.find(c => c.id === cId).tasks.push({
-                    id: Date.now(), text: tInp.value, date: dInp.value || null, done: false
+        // 2. Gestion des Tâches (Firestore)
+        function subscribeToTasks() {
+            onSnapshot(tasksCollection, (snapshot) => {
+                const tasks = [];
+                snapshot.forEach((doc) => {
+                    tasks.push({ id: doc.id, ...doc.data() });
                 });
-                tInp.value = ''; dInp.value = '';
-                render();
-                saveToCloud();
-            }
-        };
-
-        window.toggleTask = (pId, cId, tId) => {
-            const t = state.poles.find(p => p.id === pId).categories.find(c => c.id === cId).tasks.find(tk => tk.id === tId);
-            if (t) {
-                t.done = !t.done;
-                render();
-                saveToCloud();
-            }
-        };
-
-        window.removeCategory = (pId, cId) => {
-            if(confirm("Supprimer cette catégorie ?")) {
-                const p = state.poles.find(p => p.id === pId);
-                if (p) {
-                    p.categories = p.categories.filter(c => c.id !== cId);
-                    render();
-                    saveToCloud();
-                }
-            }
-        };
-
-        const isLate = (t) => {
-            if (t.done || !t.date) return false;
-            return new Date(t.date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
-        };
-
-        function render() {
-            let totalLate = 0;
-            state.poles.forEach(p => p.categories.forEach(c => totalLate += c.tasks.filter(t => isLate(t)).length));
-            
-            document.getElementById('late-badge').innerText = `${totalLate} Retard${totalLate > 1 ? 's' : ''}`;
-            document.getElementById('notif-dot').style.display = totalLate > 0 ? 'block' : 'none';
-            
-            const hInd = document.getElementById('health-indicators');
-            const activeBars = totalLate === 0 ? 4 : (totalLate < 3 ? 3 : (totalLate < 6 ? 2 : 1));
-            hInd.innerHTML = Array(4).fill(0).map((_,i) => `<div class="w-3 h-1 ${activeBars > 1 ? 'bg-emerald-500' : 'bg-red-500'} ${i < activeBars ? '' : 'opacity-20'} rounded-full"></div>`).join('');
-
-            const tabDash = document.getElementById('tab-dashboard');
-            if (tabDash) tabDash.className = `tab-btn ${state.activeTab === 'dashboard' ? 'active' : 'text-slate-500'} px-6 py-2.5 rounded-xl text-sm font-semibold`;
-            
-            document.getElementById('dynamic-tabs').innerHTML = state.poles.map(p => `
-                <button onclick="switchTab('${p.id}')" class="tab-btn ${state.activeTab === p.id ? 'active' : 'text-slate-500'} px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
-                    ${p.name} <i onclick="removePole('${p.id}', event)" class="fas fa-times text-[10px] opacity-30 hover:opacity-100 p-1"></i>
-                </button>
-            `).join('');
-
-            const container = document.getElementById('main-content');
-            if (state.activeTab === 'dashboard') {
-                container.innerHTML = `
-                    <div class="animate-fade">
-                        <h2 class="text-xl font-extrabold text-slate-800 uppercase mb-8">Vue d'ensemble</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            ${state.poles.map(p => {
-                                let total = 0, done = 0, late = 0;
-                                p.categories.forEach(c => {
-                                    total += c.tasks.length;
-                                    done += c.tasks.filter(t => t.done).length;
-                                    late += c.tasks.filter(t => isLate(t)).length;
-                                });
-                                const pct = total === 0 ? 0 : Math.round((done/total)*100);
-                                return `
-                                    <div onclick="switchTab('${p.id}')" class="glass-card p-8 hover:shadow-xl transition-all cursor-pointer border-b-4 ${late > 0 ? 'border-red-400' : 'border-emerald-400'}">
-                                        <div class="flex justify-between items-start mb-4">
-                                            <h3 class="font-bold text-slate-800">${p.name}</h3>
-                                            ${late > 0 ? `<span class="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded font-bold">${late} RETARD</span>` : ''}
-                                        </div>
-                                        <div class="progress-bar-bg mb-2"><div class="progress-bar-fill ${late > 0 ? 'bg-orange-400' : 'bg-indigo-600'}" style="width: ${pct}%"></div></div>
-                                        <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${total} Tâches</span><span class="text-sm font-black text-slate-800">${pct}%</span></div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            } else {
-                const pole = state.poles.find(p => p.id === state.activeTab);
-                if(!pole) return;
-                container.innerHTML = `
-                    <div class="animate-fade grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        ${pole.categories.map(cat => `
-                            <div class="glass-card p-6">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="text-xl font-extrabold text-slate-800">${cat.name}</h3>
-                                    <button onclick="removeCategory('${pole.id}', '${cat.id}')" class="text-slate-300 hover:text-red-500 p-2"><i class="fas fa-trash-alt"></i></button>
-                                </div>
-                                <div class="space-y-2 mb-6">
-                                    ${cat.tasks.map(t => `
-                                        <div onclick="toggleTask('${pole.id}', '${cat.id}', ${t.id})" class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200">
-                                            <div class="w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${t.done ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}">
-                                                ${t.done ? '<i class="fas fa-check text-white text-[8px]"></i>' : ''}
-                                            </div>
-                                            <div class="flex-1">
-                                                <p class="text-sm font-semibold ${t.done ? 'line-through text-slate-400' : 'text-slate-700'}">${t.text}</p>
-                                                ${t.date ? `<span class="text-[9px] font-bold ${isLate(t) ? 'text-red-500' : 'text-slate-400'} uppercase"><i class="far fa-calendar-alt mr-1"></i> ${new Date(t.date).toLocaleDateString('fr-FR')}</span>` : ''}
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                                <div class="bg-slate-50 p-4 rounded-2xl space-y-2 border border-slate-100">
-                                    <input id="ti-${cat.id}" type="text" placeholder="Action..." class="w-full px-4 py-2 rounded-lg text-sm border-none focus:ring-2 focus:ring-indigo-500">
-                                    <div class="flex gap-2">
-                                        <input id="td-${cat.id}" type="date" class="flex-1 px-4 py-2 rounded-lg text-xs border-none">
-                                        <button onclick="addTask('${pole.id}', '${cat.id}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Ajouter</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                        <div class="border-2 border-dashed border-slate-200 rounded-[32px] p-8 bg-white/50 text-center flex flex-col items-center justify-center">
-                            <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Nouveau Groupe</span>
-                            <div class="flex gap-2 w-full max-w-sm">
-                                <input id="new-cat-${pole.id}" type="text" placeholder="Ex: LOGISTIQUE" class="flex-1 px-4 py-3 rounded-xl border border-slate-100 shadow-sm outline-none">
-                                <button onclick="addCategory('${pole.id}')" class="bg-slate-800 text-white px-6 py-3 rounded-xl font-bold">Créer</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            const target = new Date('2026-09-01T08:30:00').getTime();
-            const now = Date.now();
-            const diff = target - now;
-            document.getElementById('days').innerText = Math.max(0, Math.floor(diff / 86400000)).toString().padStart(3,'0');
-            document.getElementById('hours').innerText = Math.max(0, Math.floor((diff % 86400000) / 3600000)).toString().padStart(2,'0');
+                renderTasks(tasks);
+                updateStats(tasks);
+            }, (error) => {
+                console.error("Firestore error:", error);
+            });
         }
 
-        // Démarrage
-        init();
+        async function addTask(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const title = taskTitleInput.value.trim();
+            const priority = taskPriorityInput.value;
+
+            if (title) {
+                await addDoc(tasksCollection, {
+                    title,
+                    priority,
+                    status: 'todo',
+                    createdAt: Timestamp.now(),
+                    createdBy: currentUser.uid
+                });
+                taskTitleInput.value = '';
+            }
+        }
+
+        async function updateTaskStatus(id, newStatus) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id);
+            await updateDoc(docRef, { status: newStatus });
+        }
+
+        async function deleteTask(id) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tasks', id);
+            await deleteDoc(docRef);
+        }
+
+        // 3. Rendu UI
+        function renderTasks(tasks) {
+            const cols = {
+                todo: document.getElementById('col-todo'),
+                doing: document.getElementById('col-doing'),
+                done: document.getElementById('col-done')
+            };
+
+            // Vider les colonnes
+            if (cols.todo) Object.values(cols).forEach(el => el.innerHTML = '');
+
+            tasks.forEach(task => {
+                const card = createTaskCard(task);
+                if (cols[task.status]) cols[task.status].appendChild(card);
+            });
+
+            refreshIcons();
+            
+            // Mise à jour des compteurs
+            const todoCount = document.getElementById('todo-count');
+            const doingCount = document.getElementById('doing-count');
+            const doneCount = document.getElementById('done-count');
+            
+            if (todoCount) todoCount.innerText = tasks.filter(t => t.status === 'todo').length;
+            if (doingCount) doingCount.innerText = tasks.filter(t => t.status === 'doing').length;
+            if (doneCount) doneCount.innerText = tasks.filter(t => t.status === 'done').length;
+        }
+
+        function createTaskCard(task) {
+            const div = document.createElement('div');
+            div.className = 'task-card bg-white p-4 rounded-lg shadow-sm border border-slate-200 group';
+            
+            const priorityColors = {
+                low: 'bg-blue-100 text-blue-600',
+                medium: 'bg-amber-100 text-amber-600',
+                high: 'bg-rose-100 text-rose-600'
+            };
+
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-bold uppercase px-2 py-0.5 rounded ${priorityColors[task.priority]}">
+                        ${task.priority}
+                    </span>
+                    <button class="text-slate-300 hover:text-rose-500 transition-colors delete-btn">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <h4 class="font-medium text-slate-800 mb-4">${task.title}</h4>
+                <div class="flex gap-2">
+                    ${task.status !== 'todo' ? `<button class="move-todo text-xs bg-slate-100 hover:bg-slate-200 p-1 px-2 rounded">À faire</button>` : ''}
+                    ${task.status !== 'doing' ? `<button class="move-doing text-xs bg-indigo-50 hover:bg-indigo-100 p-1 px-2 rounded text-indigo-600">En cours</button>` : ''}
+                    ${task.status !== 'done' ? `<button class="move-done text-xs bg-emerald-50 hover:bg-emerald-100 p-1 px-2 rounded text-emerald-600">Terminé</button>` : ''}
+                </div>
+            `;
+
+            // Events
+            div.querySelector('.delete-btn').onclick = () => deleteTask(task.id);
+            if(div.querySelector('.move-todo')) div.querySelector('.move-todo').onclick = () => updateTaskStatus(task.id, 'todo');
+            if(div.querySelector('.move-doing')) div.querySelector('.move-doing').onclick = () => updateTaskStatus(task.id, 'doing');
+            if(div.querySelector('.move-done')) div.querySelector('.move-done').onclick = () => updateTaskStatus(task.id, 'done');
+
+            return div;
+        }
+
+        function updateStats(tasks) {
+            const total = tasks.length;
+            const done = tasks.filter(t => t.status === 'done').length;
+            const open = total - done;
+            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+            const progressPercent = document.getElementById('progress-percent');
+            const progressBar = document.getElementById('progress-bar');
+            const openTasksCount = document.getElementById('open-tasks-count');
+            const completedTasksCount = document.getElementById('completed-tasks-count');
+
+            if (progressPercent) progressPercent.innerText = `${percent}%`;
+            if (progressBar) progressBar.style.width = `${percent}%`;
+            if (openTasksCount) openTasksCount.innerText = open;
+            if (completedTasksCount) completedTasksCount.innerText = done;
+        }
+
+        // Listeners
+        if (taskForm) taskForm.addEventListener('submit', addTask);
+
+        // Initialisation de Lucide au chargement de la fenêtre
+        window.addEventListener('load', () => {
+            refreshIcons();
+        });
+
+        // Start
+        initAuth();
     </script>
 </body>
 </html>
