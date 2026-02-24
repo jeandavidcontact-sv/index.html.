@@ -44,7 +44,6 @@
             color: #334155;
         }
 
-        /* Bouton suppression SaaS Style (Rouge Moderne) */
         .saas-delete-btn {
             display: flex;
             align-items: center;
@@ -125,6 +124,40 @@
             background: transparent;
         }
 
+        /* Styles pour la modale de confirmation */
+        #confirm-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 2rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(1);
+            animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
         #tabs-container::-webkit-scrollbar { display: none; }
         #tabs-container { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -155,6 +188,25 @@
             <!-- Contenu dynamique -->
         </main>
         
+    </div>
+
+    <!-- Modale de Confirmation -->
+    <div id="confirm-modal">
+        <div class="modal-card">
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-900 text-center mb-2">Confirmer la suppression ?</h3>
+            <p class="text-slate-500 text-center text-sm mb-8">Cette action est irréversible et supprimera définitivement cet élément.</p>
+            <div class="flex flex-col gap-3">
+                <button id="confirm-delete-btn" class="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-rose-100 active:scale-95">
+                    Supprimer définitivement
+                </button>
+                <button id="cancel-delete-btn" class="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-2xl transition-all active:scale-95">
+                    Annuler
+                </button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -201,16 +253,40 @@
         ];
         
         let activeTabId = 'dashboard';
+        let pendingDeleteAction = null;
 
         const container = document.getElementById('tabs-container');
         const contentArea = document.getElementById('main-content');
         const addBtn = document.getElementById('add-tab-btn');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmBtn = document.getElementById('confirm-delete-btn');
+        const cancelBtn = document.getElementById('cancel-delete-btn');
 
         function render() {
             renderTabs();
             renderContent();
             if (window.lucide) window.lucide.createIcons();
         }
+
+        // --- Système de confirmation ---
+        function requestConfirmation(action) {
+            pendingDeleteAction = action;
+            confirmModal.style.display = 'flex';
+            if (window.lucide) window.lucide.createIcons();
+        }
+
+        confirmBtn.onclick = () => {
+            if (pendingDeleteAction) {
+                pendingDeleteAction();
+                pendingDeleteAction = null;
+            }
+            confirmModal.style.display = 'none';
+        };
+
+        cancelBtn.onclick = () => {
+            pendingDeleteAction = null;
+            confirmModal.style.display = 'none';
+        };
 
         function renderTabs() {
             container.innerHTML = '';
@@ -238,7 +314,10 @@
                     const del = document.createElement('button');
                     del.className = 'saas-delete-btn w-6 h-6 ml-2';
                     del.innerHTML = '<i data-lucide="x" class="w-3 h-3"></i>';
-                    del.onclick = (e) => { e.stopPropagation(); deleteTab(tab.id); };
+                    del.onclick = (e) => { 
+                        e.stopPropagation(); 
+                        requestConfirmation(() => deleteTab(tab.id));
+                    };
                     tabEl.appendChild(del);
                 }
 
@@ -291,7 +370,7 @@
                             class="font-extrabold text-slate-800 text-lg outline-none w-full bg-transparent focus:text-indigo-600 placeholder:text-slate-300"
                             onblur="window.updateCategoryTitle('${cat.id}', this.value)"
                             placeholder="Titre de catégorie">
-                        <button onclick="window.deleteCategory('${cat.id}')" 
+                        <button onclick="window.confirmDeleteCategory('${cat.id}')" 
                                 class="saas-delete-btn w-9 h-9">
                             <i data-lucide="x" class="w-5 h-5"></i>
                         </button>
@@ -321,7 +400,7 @@
                                                 onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
                                         </div>
                                         
-                                        <button onclick="window.deleteTask('${cat.id}', '${task.id}')" 
+                                        <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}')" 
                                                 class="saas-delete-btn w-8 h-8">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </button>
@@ -345,6 +424,23 @@
 
         // --- GESTION DES ACTIONS ---
         
+        window.confirmDeleteCategory = (catId) => {
+            requestConfirmation(() => {
+                const activeTab = tabs.find(t => t.id === activeTabId);
+                activeTab.categories = activeTab.categories.filter(c => c.id !== catId);
+                render();
+            });
+        };
+
+        window.confirmDeleteTask = (catId, taskId) => {
+            requestConfirmation(() => {
+                const activeTab = tabs.find(t => t.id === activeTabId);
+                const cat = activeTab.categories.find(c => c.id === catId);
+                cat.tasks = cat.tasks.filter(t => t.id !== taskId);
+                render();
+            });
+        };
+
         window.cycleStatus = (catId, taskId) => {
             const activeTab = tabs.find(t => t.id === activeTabId);
             const cat = activeTab.categories.find(c => c.id === catId);
@@ -378,12 +474,6 @@
             if (cat) cat.title = newTitle;
         };
 
-        window.deleteCategory = (catId) => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            activeTab.categories = activeTab.categories.filter(c => c.id !== catId);
-            render();
-        };
-
         window.addTask = (catId) => {
             const activeTab = tabs.find(t => t.id === activeTabId);
             const cat = activeTab.categories.find(c => c.id === catId);
@@ -401,13 +491,6 @@
             const cat = activeTab.categories.find(c => c.id === catId);
             const task = cat.tasks.find(t => t.id === taskId);
             task.text = newText;
-        };
-
-        window.deleteTask = (catId, taskId) => {
-            const activeTab = tabs.find(t => t.id === activeTabId);
-            const cat = activeTab.categories.find(c => c.id === catId);
-            cat.tasks = cat.tasks.filter(t => t.id !== taskId);
-            render();
         };
 
         function deleteTab(id) {
