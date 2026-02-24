@@ -20,16 +20,18 @@
             margin-bottom: 2rem;
         }
 
-        /* Barre d'onglets style Capture d'écran */
+        /* Barre d'onglets - Assurer une hauteur minimale pour la visibilité */
         .tabs-wrapper {
             background: #f1f5f9;
             border-radius: 1.2rem;
-            padding: 0.4rem;
+            padding: 0.5rem;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.5rem;
             border: 1px solid #e2e8f0;
             margin-bottom: 2.5rem;
+            min-height: 3.5rem; 
+            overflow-x: auto;
         }
 
         .tab-btn {
@@ -45,6 +47,7 @@
             cursor: pointer;
             border: 1px solid transparent;
             white-space: nowrap;
+            background: transparent;
         }
 
         .tab-btn.active {
@@ -71,22 +74,27 @@
             background: #94a3b8;
         }
 
+        /* Bouton d'ajout d'onglet : Transparent avec contour bleu */
         .add-tab-trigger {
             margin-left: auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 2.2rem;
-            height: 2.2rem;
-            border-radius: 0.6rem;
-            background: #475569;
-            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.8rem;
+            background: transparent;
+            color: #2563eb; /* Bleu */
+            border: 2px solid #2563eb; /* Contour bleu */
             flex-shrink: 0;
-            margin-right: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 0.25rem;
         }
 
         .add-tab-trigger:hover {
-            background: #1e293b;
+            background: rgba(37, 99, 235, 0.1); /* Fond bleu très léger au survol */
+            transform: scale(1.05);
         }
 
         /* Kanban styling */
@@ -126,9 +134,9 @@
 
         <!-- Navigation par Onglets Dynamiques -->
         <div class="tabs-wrapper" id="tabs-container">
-            <!-- Injecté par JS -->
-            <button class="add-tab-trigger" id="add-tab-btn">
-                <i data-lucide="plus" class="w-5 h-5"></i>
+            <!-- Les onglets s'inséreront ici via JS -->
+            <button class="add-tab-trigger" id="add-tab-btn" title="Ajouter un onglet">
+                <i data-lucide="plus" class="w-6 h-6"></i>
             </button>
         </div>
 
@@ -182,22 +190,15 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
-            authDomain: "capdavid-5cb65.firebaseapp.com",
-            projectId: "capdavid-5cb65",
-            storageBucket: "capdavid-5cb65.firebasestorage.app",
-            messagingSenderId: "346917679110",
-            appId: "1:346917679110:web:2b76ad31621eec618ed387"
-        };
-
+        // Configuration Firebase
+        const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = "david-medical-pro";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'david-medical-pro';
 
         const tabsColl = collection(db, 'artifacts', appId, 'public', 'data', 'tabs');
         const tasksColl = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
@@ -212,43 +213,64 @@
         const addTabBtn = document.getElementById('add-tab-btn');
         const taskForm = document.getElementById('task-form');
 
-        const refreshIcons = () => lucide.createIcons();
+        const refreshIcons = () => {
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        };
 
-        // AUTH
+        // AUTHENTIFICATION
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Erreur d'authentification:", error);
+            }
+        };
+        initAuth();
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 startListeners();
-            } else {
-                signInAnonymously(auth);
             }
         });
 
-        // LISTENERS
+        // ÉCOUTEURS FIRESTORE
         function startListeners() {
-            // Onglets
+            if (!currentUser) return;
+
+            // Écoute des onglets
             onSnapshot(tabsColl, (snap) => {
                 tabsData = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => a.order - b.order);
+                
                 if (tabsData.length === 0) {
+                    // Création d'un onglet par défaut si vide
                     setDoc(doc(tabsColl, 'dashboard'), { name: "Tableau de bord", order: 0 });
                 } else {
-                    if (!tabsData.find(t => t.id === activeTabId)) activeTabId = tabsData[0].id;
+                    if (!tabsData.find(t => t.id === activeTabId)) {
+                        activeTabId = tabsData[0].id;
+                    }
                     renderTabs();
                     renderTasks();
                 }
-            });
+            }, (err) => console.error("Erreur de synchro Onglets:", err));
 
-            // Tâches
+            // Écoute des tâches
             onSnapshot(tasksColl, (snap) => {
                 tasksData = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderTasks();
-            });
+            }, (err) => console.error("Erreur de synchro Tâches:", err));
         }
 
-        // TABS LOGIC
+        // RENDU DES ONGLETS
         function renderTabs() {
-            const items = tabsContainer.querySelectorAll('.tab-btn');
-            items.forEach(i => i.remove());
+            const existingTabs = tabsContainer.querySelectorAll('.tab-btn');
+            existingTabs.forEach(t => t.remove());
 
             tabsData.forEach(tab => {
                 const btn = document.createElement('div');
@@ -259,20 +281,26 @@
                         <i data-lucide="x" class="w-2.5 h-2.5"></i>
                     </span>
                 `;
+                
                 btn.onclick = () => {
                     activeTabId = tab.id;
                     renderTabs();
                     renderTasks();
                 };
+
                 btn.ondblclick = () => {
-                    const newName = prompt("Nouveau nom :", tab.name);
-                    if (newName) updateDoc(doc(tabsColl, tab.id), { name: newName });
+                    const newName = prompt("Nouveau nom pour cet onglet :", tab.name);
+                    if (newName && newName.trim()) {
+                        updateDoc(doc(tabsColl, tab.id), { name: newName.trim() });
+                    }
                 };
+
                 tabsContainer.insertBefore(btn, addTabBtn);
             });
             refreshIcons();
         }
 
+        // Actions globales
         window.deleteTabAction = async (id) => {
             if (tabsData.length <= 1) return;
             if (confirm("Supprimer cet onglet ?")) {
@@ -281,29 +309,33 @@
         };
 
         addTabBtn.onclick = async () => {
-            const name = prompt("Nom de l'onglet :");
-            if (name) {
+            const name = prompt("Nom du nouvel onglet :");
+            if (name && name.trim()) {
                 const id = "tab_" + Date.now();
-                await setDoc(doc(tabsColl, id), { name, order: tabsData.length });
+                await setDoc(doc(tabsColl, id), { 
+                    name: name.trim(), 
+                    order: tabsData.length 
+                });
                 activeTabId = id;
             }
         };
 
-        // TASKS LOGIC
+        // GESTION DES TÂCHES
         async function handleAddTask(e) {
             e.preventDefault();
-            const title = document.getElementById('task-title').value;
-            const priority = document.getElementById('task-priority').value;
-            if (!title || !currentUser) return;
+            const titleEl = document.getElementById('task-title');
+            const priorityEl = document.getElementById('task-priority');
+            
+            if (!titleEl.value || !currentUser) return;
 
             await addDoc(tasksColl, {
-                title,
-                priority,
+                title: titleEl.value,
+                priority: priorityEl.value,
                 status: 'todo',
                 tabId: activeTabId,
                 createdAt: Timestamp.now()
             });
-            document.getElementById('task-title').value = '';
+            titleEl.value = '';
         }
 
         function renderTasks() {
@@ -312,6 +344,8 @@
                 doing: document.getElementById('col-doing'),
                 done: document.getElementById('col-done')
             };
+            if (!cols.todo) return;
+            
             Object.values(cols).forEach(c => c.innerHTML = '');
 
             const currentTasks = tasksData.filter(t => t.tabId === activeTabId);
@@ -320,12 +354,16 @@
                 const card = document.createElement('div');
                 card.className = "task-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3";
                 
-                const pColor = { high: 'text-rose-600 bg-rose-50', medium: 'text-amber-600 bg-amber-50', low: 'text-blue-600 bg-blue-50' };
+                const pColor = { 
+                    high: 'text-rose-600 bg-rose-50', 
+                    medium: 'text-amber-600 bg-amber-50', 
+                    low: 'text-blue-600 bg-blue-50' 
+                };
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center">
                         <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${pColor[task.priority]}">${task.priority}</span>
-                        <button onclick="window.deleteTaskAction('${task.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">
+                        <button onclick="window.deleteTaskActionItem('${task.id}')" class="text-slate-300 hover:text-rose-500 transition-colors">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -346,9 +384,13 @@
         }
 
         window.moveTask = (id, status) => updateDoc(doc(tasksColl, id), { status });
-        window.deleteTaskAction = (id) => deleteDoc(doc(tasksColl, id));
+        window.deleteTaskActionItem = (id) => deleteDoc(doc(tasksColl, id));
 
-        taskForm.addEventListener('submit', handleAddTask);
+        if (taskForm) taskForm.addEventListener('submit', handleAddTask);
+        
+        window.onload = () => {
+            refreshIcons();
+        };
     </script>
 </body>
 </html>
