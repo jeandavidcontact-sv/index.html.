@@ -3,116 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionnaire de Projet CapDavid</title>
+    <title>DAVID MÉDICAL - Suivi de Projet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
     <style>
-        .task-card { transition: transform 0.2s, box-shadow 0.2s; }
-        .task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        [v-cloak] { display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .premium-header {
+            background: linear-gradient(135deg, #111827 0%, #1e293b 100%);
+            border-radius: 2rem;
+        }
+
+        .task-card { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        
+        .task-card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); 
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-900">
+<body class="bg-slate-50 min-h-screen p-4 md:p-8">
 
-    <div id="app" class="max-w-7xl mx-auto px-4 py-8">
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-indigo-700 flex items-center gap-2">
-                    <i data-lucide="layout"></i> CapDavid Project Tracker
+    <div id="app" class="max-w-7xl mx-auto">
+        
+        <!-- Header Minimaliste David Médical -->
+        <header class="premium-header text-white p-12 md:p-16 mb-10 shadow-2xl relative overflow-hidden flex items-center justify-center">
+            <!-- Effet de halo subtil en arrière-plan -->
+            <div class="absolute inset-0 bg-indigo-500/5 blur-3xl rounded-full transform scale-150"></div>
+            
+            <div class="relative z-10 text-center">
+                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter uppercase">
+                    DAVID MÉDICAL
                 </h1>
-                <p class="text-slate-500 mt-1">Suivez l'avancement de vos tâches en temps réel.</p>
-            </div>
-            <div id="auth-status" class="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-slate-200">
-                <div class="w-3 h-3 rounded-full bg-amber-400 animate-pulse" id="status-dot"></div>
-                <span id="user-id-display" class="text-sm font-medium text-slate-600">Connexion en cours...</span>
+                <!-- Indicateur de session discret -->
+                <div class="mt-6 flex justify-center">
+                    <div class="bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="status-dot"></div>
+                        <span id="user-id-display" class="text-[10px] font-medium text-slate-400 tracking-widest uppercase">Initialisation...</span>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-slate-500 font-medium">Progression Totale</span>
-                    <i data-lucide="trending-up" class="text-indigo-500"></i>
-                </div>
-                <div class="flex items-end gap-2">
-                    <span id="progress-percent" class="text-3xl font-bold">0%</span>
-                </div>
-                <div class="w-full bg-slate-100 h-2 rounded-full mt-4 overflow-hidden">
-                    <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-500" style="width: 0%"></div>
-                </div>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Progression</p>
+                <h3 id="progress-percent" class="text-2xl font-bold text-indigo-600">0%</h3>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-slate-500 font-medium">Tâches Ouvertes</span>
-                    <i data-lucide="list-todo" class="text-amber-500"></i>
-                </div>
-                <span id="open-tasks-count" class="text-3xl font-bold">0</span>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">En cours</p>
+                <h3 id="doing-count-stat" class="text-2xl font-bold text-amber-500">0</h3>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-slate-500 font-medium">Terminées</span>
-                    <i data-lucide="check-circle" class="text-emerald-500"></i>
-                </div>
-                <span id="completed-tasks-count" class="text-3xl font-bold">0</span>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Terminées</p>
+                <h3 id="completed-tasks-count" class="text-2xl font-bold text-emerald-500">0</h3>
+            </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Total</p>
+                <h3 id="total-tasks-count" class="text-2xl font-bold text-slate-700">0</h3>
             </div>
         </div>
 
         <!-- Add Task Form -->
-        <section class="mb-10 bg-white p-6 rounded-xl shadow-sm border border-indigo-100">
-            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <i data-lucide="plus-circle" class="w-5 h-5"></i> Nouvelle Tâche
-            </h2>
+        <section class="mb-10 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <form id="task-form" class="flex flex-col md:flex-row gap-4">
-                <input type="text" id="task-title" placeholder="Titre de la tâche..." required
-                    class="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                <select id="task-priority" class="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none">
-                    <option value="low">Priorité Basse</option>
-                    <option value="medium" selected>Priorité Moyenne</option>
-                    <option value="high">Priorité Haute</option>
+                <div class="flex-1 relative">
+                    <i data-lucide="plus" class="absolute left-4 top-3 w-5 h-5 text-slate-400"></i>
+                    <input type="text" id="task-title" placeholder="Nouvelle mission..." required
+                        class="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all">
+                </div>
+                <select id="task-priority" class="px-6 py-3 bg-slate-50 border-none rounded-2xl focus:outline-none font-medium text-slate-600 cursor-pointer">
+                    <option value="low">Basse</option>
+                    <option value="medium" selected>Moyenne</option>
+                    <option value="high">Haute</option>
                 </select>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
                     Ajouter
                 </button>
             </form>
         </section>
 
         <!-- Kanban Board -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- To Do -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="kanban-column">
-                <h3 class="font-bold text-slate-700 mb-4 flex items-center justify-between px-2">
-                    À FAIRE <span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-xs" id="todo-count">0</span>
+                <h3 class="font-extrabold text-slate-400 mb-6 flex items-center justify-between px-2 text-sm tracking-widest uppercase">
+                    Backlog <span class="bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-[10px]" id="todo-count">0</span>
                 </h3>
                 <div id="col-todo" class="space-y-4 min-h-[200px]"></div>
             </div>
-
-            <!-- In Progress -->
             <div class="kanban-column">
-                <h3 class="font-bold text-indigo-700 mb-4 flex items-center justify-between px-2">
-                    EN COURS <span class="bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded text-xs" id="doing-count">0</span>
+                <h3 class="font-extrabold text-indigo-500 mb-6 flex items-center justify-between px-2 text-sm tracking-widest uppercase">
+                    Production <span class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px]" id="doing-count">0</span>
                 </h3>
                 <div id="col-doing" class="space-y-4 min-h-[200px]"></div>
             </div>
-
-            <!-- Done -->
             <div class="kanban-column">
-                <h3 class="font-bold text-emerald-700 mb-4 flex items-center justify-between px-2">
-                    TERMINÉ <span class="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-xs" id="done-count">0</span>
+                <h3 class="font-extrabold text-emerald-500 mb-6 flex items-center justify-between px-2 text-sm tracking-widest uppercase">
+                    Terminé <span class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px]" id="done-count">0</span>
                 </h3>
                 <div id="col-done" class="space-y-4 min-h-[200px]"></div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuration fournie par l'utilisateur
         const firebaseConfig = {
             apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
             authDomain: "capdavid-5cb65.firebaseapp.com",
@@ -124,57 +129,45 @@
             measurementId: "G-GHTM9M5WCD"
         };
 
-        // Initialisation
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // Identifiant de l'application pour Firestore (Public Data)
-        const appId = "capdavid-tracker";
+        const appId = "david-medical-tracker";
         const tasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'tasks');
 
         let currentUser = null;
 
-        // Éléments DOM
         const taskForm = document.getElementById('task-form');
         const taskTitleInput = document.getElementById('task-title');
         const taskPriorityInput = document.getElementById('task-priority');
         const userIdDisplay = document.getElementById('user-id-display');
         const statusDot = document.getElementById('status-dot');
 
-        // Initialisation des icônes Lucide avec vérification de sécurité
         const refreshIcons = () => {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            } else {
-                console.warn("Lucide library not ready yet.");
-            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         };
 
-        // 1. Authentification
         async function initAuth() {
             try {
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Auth error:", error);
-                userIdDisplay.innerText = "Erreur de connexion";
+                userIdDisplay.innerText = "Erreur Firebase";
             }
         }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                userIdDisplay.innerText = `ID: ${user.uid.substring(0, 8)}...`;
+                userIdDisplay.innerText = `SESSION: ${user.uid.substring(0, 8)}`;
                 statusDot.classList.remove('bg-amber-400');
                 statusDot.classList.add('bg-emerald-400');
                 statusDot.classList.remove('animate-pulse');
-                
-                // Charger les données une fois authentifié
                 subscribeToTasks();
             }
         });
 
-        // 2. Gestion des Tâches (Firestore)
         function subscribeToTasks() {
             onSnapshot(tasksCollection, (snapshot) => {
                 const tasks = [];
@@ -191,10 +184,8 @@
         async function addTask(e) {
             e.preventDefault();
             if (!currentUser) return;
-
             const title = taskTitleInput.value.trim();
             const priority = taskPriorityInput.value;
-
             if (title) {
                 await addDoc(tasksCollection, {
                     title,
@@ -217,62 +208,51 @@
             await deleteDoc(docRef);
         }
 
-        // 3. Rendu UI
         function renderTasks(tasks) {
             const cols = {
                 todo: document.getElementById('col-todo'),
                 doing: document.getElementById('col-doing'),
                 done: document.getElementById('col-done')
             };
-
-            // Vider les colonnes
             if (cols.todo) Object.values(cols).forEach(el => el.innerHTML = '');
-
             tasks.forEach(task => {
                 const card = createTaskCard(task);
                 if (cols[task.status]) cols[task.status].appendChild(card);
             });
-
             refreshIcons();
             
-            // Mise à jour des compteurs
-            const todoCount = document.getElementById('todo-count');
-            const doingCount = document.getElementById('doing-count');
-            const doneCount = document.getElementById('done-count');
-            
-            if (todoCount) todoCount.innerText = tasks.filter(t => t.status === 'todo').length;
-            if (doingCount) doingCount.innerText = tasks.filter(t => t.status === 'doing').length;
-            if (doneCount) doneCount.innerText = tasks.filter(t => t.status === 'done').length;
+            document.getElementById('todo-count').innerText = tasks.filter(t => t.status === 'todo').length;
+            document.getElementById('doing-count').innerText = tasks.filter(t => t.status === 'doing').length;
+            document.getElementById('done-count').innerText = tasks.filter(t => t.status === 'done').length;
         }
 
         function createTaskCard(task) {
             const div = document.createElement('div');
-            div.className = 'task-card bg-white p-4 rounded-lg shadow-sm border border-slate-200 group';
+            div.className = 'task-card bg-white p-5 rounded-2xl shadow-sm border border-slate-100 group';
             
-            const priorityColors = {
-                low: 'bg-blue-100 text-blue-600',
-                medium: 'bg-amber-100 text-amber-600',
-                high: 'bg-rose-100 text-rose-600'
+            const priorityStyles = {
+                low: 'bg-blue-50 text-blue-600',
+                medium: 'bg-amber-50 text-amber-600',
+                high: 'bg-rose-50 text-rose-600'
             };
 
             div.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-bold uppercase px-2 py-0.5 rounded ${priorityColors[task.priority]}">
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${priorityStyles[task.priority]}">
                         ${task.priority}
                     </span>
-                    <button class="text-slate-300 hover:text-rose-500 transition-colors delete-btn">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <button class="text-slate-200 hover:text-rose-500 transition-colors delete-btn">
+                        <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
-                <h4 class="font-medium text-slate-800 mb-4">${task.title}</h4>
-                <div class="flex gap-2">
-                    ${task.status !== 'todo' ? `<button class="move-todo text-xs bg-slate-100 hover:bg-slate-200 p-1 px-2 rounded">À faire</button>` : ''}
-                    ${task.status !== 'doing' ? `<button class="move-doing text-xs bg-indigo-50 hover:bg-indigo-100 p-1 px-2 rounded text-indigo-600">En cours</button>` : ''}
-                    ${task.status !== 'done' ? `<button class="move-done text-xs bg-emerald-50 hover:bg-emerald-100 p-1 px-2 rounded text-emerald-600">Terminé</button>` : ''}
+                <h4 class="font-semibold text-slate-800 mb-5 leading-tight">${task.title}</h4>
+                <div class="flex flex-wrap gap-2">
+                    ${task.status !== 'todo' ? `<button class="move-todo text-[10px] font-bold bg-slate-50 hover:bg-slate-100 p-2 rounded-xl text-slate-500 uppercase tracking-tighter">Attente</button>` : ''}
+                    ${task.status !== 'doing' ? `<button class="move-doing text-[10px] font-bold bg-indigo-50 hover:bg-indigo-100 p-2 rounded-xl text-indigo-600 uppercase tracking-tighter">Prod</button>` : ''}
+                    ${task.status !== 'done' ? `<button class="move-done text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 p-2 rounded-xl text-emerald-600 uppercase tracking-tighter">Finir</button>` : ''}
                 </div>
             `;
 
-            // Events
             div.querySelector('.delete-btn').onclick = () => deleteTask(task.id);
             if(div.querySelector('.move-todo')) div.querySelector('.move-todo').onclick = () => updateTaskStatus(task.id, 'todo');
             if(div.querySelector('.move-doing')) div.querySelector('.move-doing').onclick = () => updateTaskStatus(task.id, 'doing');
@@ -284,29 +264,17 @@
         function updateStats(tasks) {
             const total = tasks.length;
             const done = tasks.filter(t => t.status === 'done').length;
-            const open = total - done;
+            const doing = tasks.filter(t => t.status === 'doing').length;
             const percent = total === 0 ? 0 : Math.round((done / total) * 100);
 
-            const progressPercent = document.getElementById('progress-percent');
-            const progressBar = document.getElementById('progress-bar');
-            const openTasksCount = document.getElementById('open-tasks-count');
-            const completedTasksCount = document.getElementById('completed-tasks-count');
-
-            if (progressPercent) progressPercent.innerText = `${percent}%`;
-            if (progressBar) progressBar.style.width = `${percent}%`;
-            if (openTasksCount) openTasksCount.innerText = open;
-            if (completedTasksCount) completedTasksCount.innerText = done;
+            document.getElementById('progress-percent').innerText = `${percent}%`;
+            document.getElementById('doing-count-stat').innerText = doing;
+            document.getElementById('completed-tasks-count').innerText = done;
+            document.getElementById('total-tasks-count').innerText = total;
         }
 
-        // Listeners
         if (taskForm) taskForm.addEventListener('submit', addTask);
-
-        // Initialisation de Lucide au chargement de la fenêtre
-        window.addEventListener('load', () => {
-            refreshIcons();
-        });
-
-        // Start
+        window.addEventListener('load', refreshIcons);
         initAuth();
     </script>
 </body>
