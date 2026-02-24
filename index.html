@@ -41,13 +41,6 @@
                 <h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter uppercase">
                     DAVID MÉDICAL
                 </h1>
-                <!-- Indicateur de session discret -->
-                <div class="mt-6 flex justify-center">
-                    <div class="bg-white/5 backdrop-blur-sm border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="status-dot"></div>
-                        <span id="user-id-display" class="text-[10px] font-medium text-slate-400 tracking-widest uppercase">Initialisation...</span>
-                    </div>
-                </div>
             </div>
         </header>
 
@@ -141,8 +134,6 @@
         const taskForm = document.getElementById('task-form');
         const taskTitleInput = document.getElementById('task-title');
         const taskPriorityInput = document.getElementById('task-priority');
-        const userIdDisplay = document.getElementById('user-id-display');
-        const statusDot = document.getElementById('status-dot');
 
         const refreshIcons = () => {
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -153,17 +144,12 @@
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Auth error:", error);
-                userIdDisplay.innerText = "Erreur Firebase";
             }
         }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                userIdDisplay.innerText = `SESSION: ${user.uid.substring(0, 8)}`;
-                statusDot.classList.remove('bg-amber-400');
-                statusDot.classList.add('bg-emerald-400');
-                statusDot.classList.remove('animate-pulse');
                 subscribeToTasks();
             }
         });
