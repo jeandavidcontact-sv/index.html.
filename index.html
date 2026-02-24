@@ -14,7 +14,7 @@
             margin: 0;
             padding: 0;
             color: #1e293b;
-            background-color: #fdfdfe; /* Fond très légèrement bleuté/blanc */
+            background-color: #fdfdfe;
         }
 
         .premium-header {
@@ -42,7 +42,6 @@
             box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.2);
         }
 
-        /* Modern Notification Bell */
         .modern-notif {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -65,7 +64,6 @@
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
-        /* Modern Add Button */
         .btn-modern-add {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -79,12 +77,11 @@
             box-shadow: 0 15px 30px -10px rgba(239, 68, 68, 0.5);
         }
 
-        /* AMÉLIORATION CARTE SECTION (SAAS MODERNE) */
         .category-card {
             background: #ffffff;
             border-radius: 1.75rem;
             border: 1px solid rgba(226, 232, 240, 0.6);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
@@ -96,16 +93,41 @@
             border-color: rgba(239, 68, 68, 0.2);
         }
 
-        /* Lueur rouge discrète en haut de carte */
-        .category-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #ef4444, transparent);
-            opacity: 0.4;
+        /* Dashboard Styles */
+        .timeline-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding-bottom: 1rem;
+            scrollbar-width: none;
+        }
+        .timeline-scroll::-webkit-scrollbar { display: none; }
+
+        .timeline-item {
+            min-width: 280px;
+            background: white;
+            border: 1px solid #f1f5f9;
+            padding: 1.25rem;
+            border-radius: 1.25rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .timeline-item:hover {
+            border-color: #ef4444;
+            box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.1);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            transition: width 0.8s cubic-bezier(0.65, 0, 0.35, 1);
         }
 
         .task-item {
@@ -140,10 +162,6 @@
             transition: all 0.2s ease;
         }
 
-        .status-badge:hover {
-            filter: contrast(1.1);
-        }
-
         .date-container {
             position: relative;
             display: flex;
@@ -155,12 +173,6 @@
             font-size: 11px;
             font-weight: 600;
             color: #64748b;
-            transition: all 0.2s ease;
-        }
-
-        .date-container:hover {
-            background: #e2e8f0;
-            color: #0f172a;
         }
 
         .saas-delete-btn {
@@ -193,7 +205,6 @@
             width: 90%;
             max-width: 420px;
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(226, 232, 240, 0.5);
         }
 
         @keyframes fadeIn {
@@ -209,7 +220,7 @@
 
     <div id="app" class="max-w-6xl mx-auto">
         
-        <header class="premium-header text-white p-16 md:p-24 mb-10 shadow-2xl relative overflow-hidden text-center">
+        <header class="premium-header text-white p-16 md:p-20 mb-10 shadow-2xl relative overflow-hidden text-center">
             <div class="absolute top-0 left-0 w-full h-full opacity-5 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] [background-size:32px_32px]"></div>
             
             <div class="absolute top-8 right-8 z-20">
@@ -220,14 +231,14 @@
             </div>
 
             <div class="relative z-10">
-                <h1 class="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-0 drop-shadow-2xl">DAVID MEDICAL</h1>
+                <h1 class="text-6xl md:text-7xl font-black tracking-tighter uppercase mb-0 drop-shadow-2xl">DAVID MEDICAL</h1>
                 <p class="text-slate-400 text-xs font-bold tracking-[0.5em] mt-4 opacity-80">SUIVI DE DÉPLOIEMENT MÉDICAL</p>
             </div>
         </header>
 
         <div class="glass-nav flex items-center gap-2 mb-8 p-3 rounded-3xl sticky top-4 z-50 shadow-xl shadow-slate-200/40">
             <nav id="tabs-container" class="flex items-center gap-1 overflow-x-auto flex-grow px-1">
-                <!-- Onglets dynamiques -->
+                <!-- Tabs generated here -->
             </nav>
             <button id="add-tab-btn" class="btn-modern-add flex items-center gap-2 px-6 py-3.5 text-white font-bold text-[10px] uppercase tracking-widest rounded-2xl active:scale-95">
                 <i data-lucide="plus" class="w-4 h-4"></i>
@@ -240,7 +251,7 @@
         
     </div>
 
-    <!-- Modales identiques mais stylisées -->
+    <!-- Modals -->
     <div id="notif-modal">
         <div class="modal-card">
             <div class="flex items-center justify-between mb-8">
@@ -267,7 +278,7 @@
         <div class="modal-card text-center">
             <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mb-6 mx-auto"><i data-lucide="trash-2" class="w-8 h-8"></i></div>
             <h3 class="text-2xl font-black text-slate-900 mb-2">Supprimer ?</h3>
-            <p id="confirm-desc" class="text-slate-500 text-sm mb-8">Cette action est définitive et supprimera toutes les données liées.</p>
+            <p id="confirm-desc" class="text-slate-500 text-sm mb-8">Cette action est définitive.</p>
             <div class="flex gap-4">
                 <button id="confirm-delete-btn" class="flex-1 py-4 bg-red-500 text-white font-bold rounded-2xl text-sm hover:bg-red-600 transition-all">Supprimer</button>
                 <button id="cancel-delete-btn" class="flex-1 py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl text-sm hover:bg-slate-200 transition-all">Annuler</button>
@@ -291,11 +302,17 @@
 
         let tabs = [
             { id: 'dashboard', title: 'Dashboard', isDashboard: true, categories: [] },
-            { id: 'tab2', title: 'Clinique Pasteur', isDashboard: false, categories: [
+            { id: 'tab1', title: 'Clinique Pasteur', isDashboard: false, categories: [
                 { id: 'cat1', title: 'Logistique & Matériel', tasks: [
                     { id: 't1', text: 'Réception des moniteurs', status: 'done', date: '2024-03-20' },
-                    { id: 't2', text: 'Installation câblage salle A1', status: 'in-progress', date: '2024-03-28' },
+                    { id: 't2', text: 'Installation câblage salle A1', status: 'in-progress', date: '2025-05-28' },
                     { id: 't3', text: 'Test connectivité centrale', status: 'todo', date: '2024-01-15' }
+                ]}
+            ]},
+            { id: 'tab2', title: 'Hôpital Saint-Roch', isDashboard: false, categories: [
+                { id: 'cat2', title: 'Formation', tasks: [
+                    { id: 't4', text: 'Session infirmiers Bloc', status: 'todo', date: '2025-06-10' },
+                    { id: 't5', text: 'Guide utilisateur PDF', status: 'done', date: '2024-02-15' }
                 ]}
             ]}
         ];
@@ -313,48 +330,17 @@
             return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
         
-        function render() {
-            renderTabs();
-            renderContent();
-            updateNotifications();
-            if (window.lucide) window.lucide.createIcons();
-        }
-
         function isLate(dateStr, status) {
             if (!dateStr || status === 'done') return false;
             const today = new Date().toISOString().split('T')[0];
             return dateStr < today;
         }
 
-        function updateNotifications() {
-            const today = new Date().toISOString().split('T')[0];
-            const lateTasks = [];
-            tabs.forEach(tab => {
-                if (tab.isDashboard) return;
-                tab.categories.forEach(cat => {
-                    cat.tasks.forEach(task => {
-                        if (task.status !== 'done' && task.date && task.date < today) {
-                            lateTasks.push({ ...task, tabTitle: tab.title });
-                        }
-                    });
-                });
-            });
-
-            const badge = document.getElementById('notif-badge');
-            if (lateTasks.length > 0) {
-                badge.innerText = lateTasks.length;
-                badge.classList.remove('hidden');
-                document.getElementById('notif-list').innerHTML = lateTasks.map(task => `
-                    <div class="p-5 bg-rose-50/50 border border-rose-100 rounded-2xl flex flex-col gap-1">
-                        <div class="text-[9px] font-black uppercase text-rose-400 tracking-widest">${task.tabTitle}</div>
-                        <div class="text-sm font-bold text-slate-800">${task.text}</div>
-                        <div class="text-[10px] text-rose-600 font-bold mt-1">Date dépassée : ${formatDateFR(task.date)}</div>
-                    </div>
-                `).join('');
-            } else {
-                badge.classList.add('hidden');
-                document.getElementById('notif-list').innerHTML = '<div class="text-center py-16"><i data-lucide="shield-check" class="w-12 h-12 text-slate-200 mx-auto mb-4"></i><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Aucune alerte</p></div>';
-            }
+        function render() {
+            renderTabs();
+            renderContent();
+            updateNotifications();
+            if (window.lucide) window.lucide.createIcons();
         }
 
         function renderTabs() {
@@ -370,8 +356,8 @@
                     del.innerHTML = '<i data-lucide="x" class="w-3 h-3"></i>';
                     del.onclick = (e) => { 
                         e.stopPropagation(); 
-                        pendingDeleteAction = () => deleteTab(tab.id); 
-                        document.getElementById('confirm-desc').innerText = `Voulez-vous supprimer le projet "${tab.title}" ?`;
+                        pendingDeleteAction = () => { tabs = tabs.filter(t => t.id !== tab.id); if(activeTabId === tab.id) activeTabId = 'dashboard'; render(); }; 
+                        document.getElementById('confirm-desc').innerText = `Supprimer le projet "${tab.title}" ?`;
                         document.getElementById('confirm-modal').style.display='flex'; 
                     };
                     tabEl.appendChild(del);
@@ -386,14 +372,7 @@
             if (!activeTab) return;
 
             if (activeTab.isDashboard) {
-                contentArea.innerHTML = `
-                    <div class="bg-white p-20 rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center">
-                        <div class="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-8 shadow-inner">
-                            <i data-lucide="layers" class="w-10 h-10 text-slate-200"></i>
-                        </div>
-                        <h2 class="text-4xl font-black text-slate-900 mb-3 tracking-tight">Vue d'ensemble</h2>
-                        <p class="text-slate-400 text-sm max-w-sm font-medium leading-relaxed">Centralisez vos opérations et gérez vos flux de travail médicaux avec précision.</p>
-                    </div>`;
+                renderDashboard();
                 return;
             }
 
@@ -404,112 +383,196 @@
                              <p class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">PROJET ACTIF</p>
                              <input type="text" value="${activeTab.title}" class="font-black text-slate-900 text-5xl outline-none w-full bg-transparent focus:text-red-600 transition-colors tracking-tight" onblur="window.updateTabTitle('${activeTab.id}', this.value)">
                         </div>
-                        <button onclick="window.addCategory()" class="shrink-0 px-10 py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-2xl shadow-slate-200 active:scale-95">Ajouter une section</button>
+                        <button onclick="window.addCategory()" class="shrink-0 px-10 py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-2xl active:scale-95">Ajouter une section</button>
                     </div>
-                    
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        ${activeTab.categories.map((cat, idx) => {
-                            const sortedTasks = [...cat.tasks].sort((a, b) => {
-                                const aLate = isLate(a.date, a.status);
-                                const bLate = isLate(b.date, b.status);
-                                if (a.status === 'done' && b.status !== 'done') return 1;
-                                if (a.status !== 'done' && b.status === 'done') return -1;
-                                if (aLate && !bLate) return -1;
-                                if (!aLate && bLate) return 1;
-                                return (a.date || '').localeCompare(b.date || '');
-                            });
-
-                            return `
-                                <div class="category-card p-10 flex flex-col gap-8 animate-card" style="animation-delay: ${idx * 0.1}s">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center">
-                                                <i data-lucide="layout" class="w-5 h-5"></i>
-                                            </div>
-                                            <input type="text" value="${cat.title}" class="font-black text-slate-800 text-2xl outline-none bg-transparent" onblur="window.updateCategoryTitle('${cat.id}', this.value)">
+                        ${activeTab.categories.map((cat, idx) => `
+                            <div class="category-card p-10 flex flex-col gap-8 animate-card" style="animation-delay: ${idx * 0.1}s">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="layout" class="w-5 h-5"></i>
                                         </div>
-                                        <button onclick="window.confirmDeleteCategory('${cat.id}', '${cat.title.replace(/'/g, "\\'")}')" class="saas-delete-btn">
-                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                                        </button>
+                                        <input type="text" value="${cat.title}" class="font-black text-slate-800 text-2xl outline-none bg-transparent" onblur="window.updateCategoryTitle('${cat.id}', this.value)">
                                     </div>
-
-                                    <div class="flex flex-col gap-5">
-                                        ${sortedTasks.map(task => {
-                                            const isDone = task.status === 'done';
-                                            const state = STATES[task.status];
-                                            const taskIsLate = isLate(task.date, task.status);
-                                            const displayDate = formatDateFR(task.date);
-                                            return `
-                                                <div class="task-item flex items-center justify-between gap-4 ${isDone ? 'task-done' : ''}">
-                                                    <div class="flex flex-col gap-2 flex-grow">
-                                                        <input type="text" value="${task.text}" class="text-sm font-extrabold text-slate-700 outline-none bg-transparent" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
-                                                        <div class="flex items-center gap-2">
-                                                            <div class="date-container w-fit">
-                                                                <i data-lucide="calendar" class="w-3 h-3"></i>
-                                                                <span>${displayDate}</span>
-                                                                <input type="date" value="${task.date || ''}" class="absolute inset-0 opacity-0 cursor-pointer" onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
-                                                            </div>
-                                                            ${taskIsLate ? `
-                                                                <div class="flex items-center gap-1.5 px-3 py-1 bg-rose-500 text-white rounded-lg text-[8px] font-black uppercase cursor-pointer animate-pulse" onclick="window.showLateInfo('${task.text.replace(/'/g, "\\'")}', '${displayDate}')">
-                                                                    <i data-lucide="zap" class="w-2.5 h-2.5"></i> Retard
-                                                                </div>
-                                                            ` : ''}
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex items-center gap-4">
-                                                        <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" class="status-badge ${state.bg} ${state.text}">${state.label}</div>
-                                                        <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}', '${task.text.replace(/'/g, "\\'")}')" class="saas-delete-btn">
-                                                            <i data-lucide="x" class="w-4 h-4"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            `;
-                                        }).join('')}
-                                        <input type="text" placeholder="+ Ajouter une tâche..." class="w-full bg-slate-50/50 px-6 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none border-2 border-dashed border-slate-100 hover:border-red-200 focus:border-red-500 focus:bg-white transition-all text-slate-400 focus:text-slate-900" onkeydown="if(event.key === 'Enter' && this.value.trim()) { window.addTask('${cat.id}', this.value); this.value=''; }">
-                                    </div>
+                                    <button onclick="window.confirmDeleteCategory('${cat.id}', '${cat.title.replace(/'/g, "\\'")}')" class="saas-delete-btn"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                                 </div>
-                            `;
-                        }).join('')}
+                                <div class="flex flex-col gap-5">
+                                    ${cat.tasks.map(task => `
+                                        <div class="task-item flex items-center justify-between gap-4 ${task.status === 'done' ? 'task-done' : ''}">
+                                            <div class="flex flex-col gap-2 flex-grow">
+                                                <input type="text" value="${task.text}" class="text-sm font-extrabold text-slate-700 outline-none bg-transparent" onblur="window.updateTaskText('${cat.id}', '${task.id}', this.value)">
+                                                <div class="date-container w-fit">
+                                                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                    <span>${formatDateFR(task.date)}</span>
+                                                    <input type="date" value="${task.date || ''}" class="absolute inset-0 opacity-0 cursor-pointer" onchange="window.updateTaskDate('${cat.id}', '${task.id}', this.value)">
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-4">
+                                                <div onclick="window.cycleStatus('${cat.id}', '${task.id}')" class="status-badge ${STATES[task.status].bg} ${STATES[task.status].text}">${STATES[task.status].label}</div>
+                                                <button onclick="window.confirmDeleteTask('${cat.id}', '${task.id}', '${task.text.replace(/'/g, "\\'")}')" class="saas-delete-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                    <input type="text" placeholder="+ Tâche..." class="w-full bg-slate-50/50 px-6 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest outline-none border-2 border-dashed border-slate-100 focus:border-red-500 transition-all" onkeydown="if(event.key === 'Enter' && this.value.trim()) { window.addTask('${cat.id}', this.value); this.value=''; }">
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
+                </div>
+            `;
+        }
+
+        function renderDashboard() {
+            // Collecte de toutes les tâches
+            let allTasks = [];
+            tabs.forEach(tab => {
+                if(tab.isDashboard) return;
+                tab.categories.forEach(cat => {
+                    cat.tasks.forEach(task => {
+                        allTasks.push({ ...task, projectTitle: tab.title, projectId: tab.id });
+                    });
+                });
+            });
+
+            // Tri par date (on ignore celles sans date)
+            allTasks = allTasks.filter(t => t.date).sort((a, b) => a.date.localeCompare(b.date));
+
+            contentArea.innerHTML = `
+                <div class="flex flex-col gap-12">
+                    <!-- FRESQUE CHRONOLOGIQUE -->
+                    <section class="animate-card">
+                        <div class="flex items-center justify-between mb-6 px-4">
+                            <h3 class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">Fresque Chronologique</h3>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${allTasks.length} Tâches planifiées</div>
+                        </div>
+                        <div class="timeline-scroll p-4">
+                            ${allTasks.length === 0 ? `
+                                <div class="w-full text-center py-10 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Aucune tâche planifiée</p>
+                                </div>
+                            ` : allTasks.map(task => {
+                                const late = isLate(task.date, task.status);
+                                return `
+                                    <div class="timeline-item flex flex-col gap-3 group">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-[9px] font-black uppercase text-slate-400 group-hover:text-red-500 transition-colors">${task.projectTitle}</span>
+                                            ${late ? '<span class="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>' : ''}
+                                        </div>
+                                        <div class="text-sm font-bold text-slate-800 line-clamp-1">${task.text}</div>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <div class="flex items-center gap-1.5 text-slate-500">
+                                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                                <span class="text-[10px] font-bold">${formatDateFR(task.date)}</span>
+                                            </div>
+                                            <div class="text-[9px] font-black px-2 py-1 rounded bg-slate-100 text-slate-500 uppercase">${STATES[task.status].label}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </section>
+
+                    <!-- GRILLE DES PROJETS -->
+                    <section>
+                         <h3 class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] mb-8 px-4">État d'avancement des projets</h3>
+                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            ${tabs.filter(t => !t.isDashboard).map((tab, idx) => {
+                                let total = 0, done = 0;
+                                tab.categories.forEach(c => {
+                                    total += c.tasks.length;
+                                    done += c.tasks.filter(tk => tk.status === 'done').length;
+                                });
+                                const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+                                
+                                return `
+                                    <div class="category-card p-8 flex flex-col gap-6 animate-card hover:cursor-pointer" style="animation-delay: ${idx * 0.1}s" onclick="window.setActiveTab('${tab.id}')">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex flex-col gap-1">
+                                                <h4 class="text-xl font-black text-slate-900 tracking-tight">${tab.title}</h4>
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${total} Tâches au total</p>
+                                            </div>
+                                            <div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 font-black text-xs">
+                                                ${percent}%
+                                            </div>
+                                        </div>
+
+                                        <div class="flex flex-col gap-2">
+                                            <div class="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-500">
+                                                <span>Progression</span>
+                                                <span>${done}/${total}</span>
+                                            </div>
+                                            <div class="progress-bar-container">
+                                                <div class="progress-bar-fill" style="width: ${percent}%"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="pt-4 mt-2 border-t border-slate-50 flex items-center justify-between">
+                                            <div class="flex -space-x-2">
+                                                ${tab.categories.slice(0, 3).map(() => `<div class="w-7 h-7 rounded-full bg-slate-100 border-2 border-white"></div>`).join('')}
+                                            </div>
+                                            <span class="text-[9px] font-black uppercase text-red-500 tracking-widest group-hover:underline">Ouvrir le projet <i data-lucide="arrow-right" class="inline w-3 h-3 ml-1"></i></span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                         </div>
+                    </section>
                 </div>
             `;
             if (window.lucide) window.lucide.createIcons();
         }
 
-        window.showLateInfo = (name, formattedDate) => {
-            document.getElementById('late-info-text').innerText = `L'action "${name}" est signalée en retard critique. La date butoir était le ${formattedDate}. Veuillez prioriser cette tâche immédiatement.`;
-            document.getElementById('late-info-modal').style.display = 'flex';
-        };
-
+        // Window Actions
+        window.setActiveTab = (id) => { activeTabId = id; render(); };
         window.updateTabTitle = (id, v) => { const t = tabs.find(x => x.id === id); if(t) t.title = v; renderTabs(); };
         window.addCategory = () => { const activeTab = tabs.find(t => t.id === activeTabId); activeTab.categories.push({ id: 'cat' + Date.now(), title: 'Nouvelle Section', tasks: [] }); render(); };
         window.updateCategoryTitle = (catId, newTitle) => { const activeTab = tabs.find(t => t.id === activeTabId); const cat = activeTab.categories.find(c => c.id === catId); if (cat) cat.title = newTitle; };
-        
         window.confirmDeleteCategory = (catId, catTitle) => { 
-            pendingDeleteAction = () => { 
-                const activeTab = tabs.find(t => t.id === activeTabId); 
-                activeTab.categories = activeTab.categories.filter(c => c.id !== catId); 
-            }; 
-            document.getElementById('confirm-desc').innerText = `Voulez-vous supprimer la section "${catTitle}" ?`;
+            pendingDeleteAction = () => { const activeTab = tabs.find(t => t.id === activeTabId); activeTab.categories = activeTab.categories.filter(c => c.id !== catId); }; 
+            document.getElementById('confirm-desc').innerText = `Supprimer la section "${catTitle}" ?`;
             document.getElementById('confirm-modal').style.display='flex'; 
         };
-
         window.confirmDeleteTask = (catId, taskId, taskText) => {
-            pendingDeleteAction = () => {
-                const activeTab = tabs.find(t => t.id === activeTabId);
-                const cat = activeTab.categories.find(c => c.id === catId);
-                if (cat) cat.tasks = cat.tasks.filter(tk => tk.id !== taskId);
-            };
-            document.getElementById('confirm-desc').innerText = `Supprimer définitivement "${taskText}" ?`;
+            pendingDeleteAction = () => { const activeTab = tabs.find(t => t.id === activeTabId); const cat = activeTab.categories.find(c => c.id === catId); cat.tasks = cat.tasks.filter(tk => tk.id !== taskId); };
+            document.getElementById('confirm-desc').innerText = `Supprimer "${taskText}" ?`;
             document.getElementById('confirm-modal').style.display='flex';
         };
-
         window.addTask = (catId, text) => { const activeTab = tabs.find(t => t.id === activeTabId); const cat = activeTab.categories.find(c => c.id === catId); cat.tasks.push({ id: 'task' + Date.now(), text, status: 'todo', date: new Date().toISOString().split('T')[0] }); render(); };
         window.updateTaskText = (cid, tid, text) => { const cat = tabs.find(t => t.id === activeTabId).categories.find(c => c.id === cid); const task = cat.tasks.find(tk => tk.id === tid); task.text = text; };
         window.updateTaskDate = (cid, tid, date) => { const cat = tabs.find(t => t.id === activeTabId).categories.find(c => c.id === cid); const task = cat.tasks.find(tk => tk.id === tid); task.date = date; render(); };
         window.cycleStatus = (cid, tid) => { const cat = tabs.find(t => t.id === activeTabId).categories.find(c => c.id === cid); const task = cat.tasks.find(tk => tk.id === tid); const order = ['todo', 'in-progress', 'done']; task.status = order[(order.indexOf(task.status) + 1) % 3]; render(); };
-        
-        function deleteTab(id) { tabs = tabs.filter(t => t.id !== id); if (activeTabId === id) activeTabId = 'dashboard'; render(); }
+        window.showLateInfo = (name, date) => { document.getElementById('late-info-text').innerText = `L'action "${name}" est en retard (échéance : ${date}).`; document.getElementById('late-info-modal').style.display = 'flex'; };
+
+        function updateNotifications() {
+            const today = new Date().toISOString().split('T')[0];
+            const lateTasks = [];
+            tabs.forEach(tab => {
+                if (tab.isDashboard) return;
+                tab.categories.forEach(cat => {
+                    cat.tasks.forEach(task => {
+                        if (task.status !== 'done' && task.date && task.date < today) {
+                            lateTasks.push({ ...task, tabTitle: tab.title });
+                        }
+                    });
+                });
+            });
+            const badge = document.getElementById('notif-badge');
+            if (lateTasks.length > 0) {
+                badge.innerText = lateTasks.length;
+                badge.classList.remove('hidden');
+                document.getElementById('notif-list').innerHTML = lateTasks.map(task => `
+                    <div class="p-4 bg-rose-50 border border-rose-100 rounded-2xl">
+                        <div class="text-[9px] font-black uppercase text-rose-400">${task.tabTitle}</div>
+                        <div class="text-sm font-bold text-slate-800">${task.text}</div>
+                        <div class="text-[10px] text-rose-600 font-bold mt-1">Échéance : ${formatDateFR(task.date)}</div>
+                    </div>
+                `).join('');
+            } else {
+                badge.classList.add('hidden');
+                document.getElementById('notif-list').innerHTML = '<div class="text-center py-10 text-slate-300 text-xs font-bold uppercase">Aucune alerte</div>';
+            }
+        }
 
         document.getElementById('confirm-delete-btn').onclick = () => { if(pendingDeleteAction) pendingDeleteAction(); document.getElementById('confirm-modal').style.display='none'; render(); };
         document.getElementById('cancel-delete-btn').onclick = () => { pendingDeleteAction = null; document.getElementById('confirm-modal').style.display='none'; };
