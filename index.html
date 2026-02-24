@@ -83,7 +83,6 @@
             gap: 1rem;
         }
 
-        /* Scrollbar styling */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -92,13 +91,12 @@
 
     <div id="loading-overlay">
         <div class="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p id="loading-text" class="text-slate-500 font-bold text-sm tracking-widest uppercase text-center px-4">Connexion au Cloud...</p>
+        <p id="loading-text" class="text-slate-500 font-bold text-sm tracking-widest uppercase text-center px-4">Initialisation Cloud...</p>
     </div>
 
     <!-- HEADER -->
     <header class="dark-header w-full px-6 py-8 sm:px-12 shadow-2xl mb-8">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-            
             <div class="health-badge flex items-center gap-4 px-5 py-3 rounded-2xl border border-white/10">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
@@ -127,7 +125,7 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <div id="user-display" class="text-[10px] text-white/30 hidden md:block"></div>
+                <div id="user-status" class="text-[10px] text-white/30 hidden md:block italic">Connexion...</div>
                 <button class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all border border-white/5 relative">
                     <i class="fas fa-bell text-sm"></i>
                     <span id="notif-dot" class="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full hidden"></span>
@@ -152,11 +150,11 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // CONFIGURATION GLOBALE
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        // CONFIGURATION FIREBASE
+        const firebaseConfig = {
             apiKey: "AIzaSyBC0gg7v8KQltQskGo6PUaFq_megSwlixQ",
             authDomain: "capdavid-5cb65.firebaseapp.com",
             projectId: "capdavid-5cb65",
@@ -166,49 +164,43 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Identifiants d'environnement
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'capdavid-5cb65';
-
+        let currentUser = null;
         let state = { poles: [], activeTab: 'dashboard' };
-        let user = null;
 
-        // AUTHENTIFICATION RIGOUREUSE (RULE 3)
-        const initAuth = async () => {
+        // INITIALISATION & SYNC
+        const init = async () => {
             const loadingText = document.getElementById('loading-text');
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Authentification anonyme pour accéder à Firestore
+                await signInAnonymously(auth);
             } catch (error) {
-                console.error("Échec auth:", error);
+                console.error("Erreur Auth:", error);
                 loadingText.innerText = "Erreur de connexion cloud.";
             }
         };
 
-        // GESTION DU CYCLE DE VIE
-        onAuthStateChanged(auth, (u) => {
-            user = u;
+        onAuthStateChanged(auth, (user) => {
             if (user) {
-                document.getElementById('user-display').innerText = `ID: ${user.uid.substring(0,8)}`;
-                startSync();
+                currentUser = user;
+                document.getElementById('user-status').innerText = `Cloud Connecté (${user.uid.substring(0,5)})`;
+                setupSubscription();
             }
         });
 
-        const startSync = () => {
-            if (!user) return;
-
-            // Chemin public conforme à RULE 1
+        const setupSubscription = () => {
+            // Chemin conforme aux règles de l'environnement (nombre pair de segments pour un doc)
             const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'main', 'state');
             
-            // Écoute en temps réel
             onSnapshot(stateDocRef, (snap) => {
                 if (snap.exists()) {
                     state = snap.data();
                 } else {
-                    // État initial si nouveau document
+                    // Création de l'état initial s'il n'existe pas
                     state = {
                         poles: [
                             { id: 'p1', name: 'Mobiliers / Immobiliers', categories: [] },
@@ -220,14 +212,14 @@
                 }
                 document.getElementById('loading-overlay').style.display = 'none';
                 render();
-            }, (error) => {
-                console.error("Erreur Firestore:", error);
-                document.getElementById('loading-text').innerText = "Problème de synchronisation.";
+            }, (err) => {
+                console.error("Erreur Sync:", err);
+                document.getElementById('loading-text').innerText = "Vérifiez vos règles Firestore.";
             });
         };
 
         const saveToCloud = async () => {
-            if (!user) return;
+            if (!currentUser) return;
             const stateDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'main', 'state');
             try {
                 await setDoc(stateDocRef, state);
@@ -236,7 +228,7 @@
             }
         };
 
-        // ACTIONS UTILISATEUR
+        // FONCTIONS GLOBALES
         window.switchTab = (id) => { state.activeTab = id; render(); saveToCloud(); };
         
         window.addNewPole = () => {
@@ -262,7 +254,7 @@
 
         window.addCategory = (pId) => {
             const inp = document.getElementById(`new-cat-${pId}`);
-            if (inp.value.trim()) {
+            if (inp && inp.value.trim()) {
                 state.poles.find(p => p.id === pId).categories.push({ id: 'c'+Date.now(), name: inp.value, tasks: [] });
                 inp.value = '';
                 render();
@@ -273,7 +265,7 @@
         window.addTask = (pId, cId) => {
             const tInp = document.getElementById(`ti-${cId}`);
             const dInp = document.getElementById(`td-${cId}`);
-            if (tInp.value.trim()) {
+            if (tInp && tInp.value.trim()) {
                 state.poles.find(p => p.id === pId).categories.find(c => c.id === cId).tasks.push({
                     id: Date.now(), text: tInp.value, date: dInp.value || null, done: false
                 });
@@ -285,17 +277,21 @@
 
         window.toggleTask = (pId, cId, tId) => {
             const t = state.poles.find(p => p.id === pId).categories.find(c => c.id === cId).tasks.find(tk => tk.id === tId);
-            t.done = !t.done;
-            render();
-            saveToCloud();
+            if (t) {
+                t.done = !t.done;
+                render();
+                saveToCloud();
+            }
         };
 
         window.removeCategory = (pId, cId) => {
             if(confirm("Supprimer cette catégorie ?")) {
                 const p = state.poles.find(p => p.id === pId);
-                p.categories = p.categories.filter(c => c.id !== cId);
-                render();
-                saveToCloud();
+                if (p) {
+                    p.categories = p.categories.filter(c => c.id !== cId);
+                    render();
+                    saveToCloud();
+                }
             }
         };
 
@@ -304,7 +300,6 @@
             return new Date(t.date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
         };
 
-        // RENDU DE L'INTERFACE
         function render() {
             let totalLate = 0;
             state.poles.forEach(p => p.categories.forEach(c => totalLate += c.tasks.filter(t => isLate(t)).length));
@@ -316,7 +311,9 @@
             const activeBars = totalLate === 0 ? 4 : (totalLate < 3 ? 3 : (totalLate < 6 ? 2 : 1));
             hInd.innerHTML = Array(4).fill(0).map((_,i) => `<div class="w-3 h-1 ${activeBars > 1 ? 'bg-emerald-500' : 'bg-red-500'} ${i < activeBars ? '' : 'opacity-20'} rounded-full"></div>`).join('');
 
-            document.getElementById('tab-dashboard').className = `tab-btn ${state.activeTab === 'dashboard' ? 'active' : 'text-slate-500'} px-6 py-2.5 rounded-xl text-sm font-semibold`;
+            const tabDash = document.getElementById('tab-dashboard');
+            if (tabDash) tabDash.className = `tab-btn ${state.activeTab === 'dashboard' ? 'active' : 'text-slate-500'} px-6 py-2.5 rounded-xl text-sm font-semibold`;
+            
             document.getElementById('dynamic-tabs').innerHTML = state.poles.map(p => `
                 <button onclick="switchTab('${p.id}')" class="tab-btn ${state.activeTab === p.id ? 'active' : 'text-slate-500'} px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
                     ${p.name} <i onclick="removePole('${p.id}', event)" class="fas fa-times text-[10px] opacity-30 hover:opacity-100 p-1"></i>
@@ -402,8 +399,8 @@
             document.getElementById('hours').innerText = Math.max(0, Math.floor((diff % 86400000) / 3600000)).toString().padStart(2,'0');
         }
 
-        // Lancement
-        initAuth();
+        // Démarrage
+        init();
     </script>
 </body>
 </html>
